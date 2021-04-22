@@ -6,6 +6,7 @@ authors = ["Craig  <ctr26@ebi.ac.uk>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+scikit-image = "^0.18.1"
 
 [tool.poetry.dev-dependencies]
 
