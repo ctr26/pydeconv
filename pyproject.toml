@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pydecon"
+name = "pydeconv"
 version = "0.1.0"
 description = ""
 authors = ["Craig  <ctr26@ebi.ac.uk>"]
@@ -9,6 +9,7 @@ python = "^3.8"
 scikit-image = "^0.18.1"
 
 [tool.poetry.dev-dependencies]
+black = {version = "^20.8b1", allow-prereleases = true}
 
 [build-system]
 requires = ["poetry>=0.12"]
