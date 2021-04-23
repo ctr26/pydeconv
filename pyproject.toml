@@ -7,6 +7,16 @@ authors = ["Craig  <ctr26@ebi.ac.uk>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 scikit-image = "^0.18.1"
+numpy = "^1.20.2"
+tqdm = "^4.60.0"
+matplotlib = "^3.4.1"
+pandas = "^1.2.4"
+dask = "^2021.4.0"
+seaborn = "^0.11.1"
+Pillow = "^8.2.0"
+PIMS = "^0.5"
+scikit-learn = "^0.24.1"
+torch = "^1.8.1"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^20.8b1", allow-prereleases = true}
