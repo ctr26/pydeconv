@@ -78,6 +78,74 @@ def gaussian(dims=[10, 10], mu=[0, 0], sigma=[1, 1]):
     return _gaussian_nd(dims, mu, sigma)
 
 
+def variable_psf(image, psf_fun):
+    """
+    Image is only used for finding the extent of the image.
+    psf_fun takes in a radius, probably would be better with a normalised coord
+    """
+    # image_dims = image.shape
+    # grid_coords = np.meshgrid(
+    #     *[np.linspace(-1, 1, image_dim) for image_dim in image_dims]
+    # )
+    # r_map = np.add.reduce(np.power(grid_coords, 2.0))
+
+    psf_array = map_of_fun(image,psf_fun)
+    # psf_array = psf_fun(r_map)
+    return psf_array
+
+    # r_dist = r_map[coords]
+    # def sigma_scale(r_dist):
+    #     return (r_dist + 0.01) * 3
+    # for i,sigma in enumerate(sigma_map):
+    #     coords = np.unravel_index(i, image_dims.shape)
+    #     psf_array[coords] = point_spread_function.gaussian(psf_dims,mu,sigma)
+
+
+# def variable_gaussian_psf(image, psf_dims, mu_map, sigma_map):
+#     def psf_fun(r_map):
+#         psf_array = np.empty([image.shape + psf_dims])
+#         sigma_map = sigma_fun(r_map)
+#         for i, sigma in enumerate(sigma_map):
+#             coords = np.unravel_index(i, image.shape)
+#             psf_array[coords, :, :] = gaussian(
+#                 psf_dims, mu_map[coords], sigma_map[coords]
+#             )
+#         return psf_array
+
+#     return variable_psf(image, psf_fun)
+#     # image_dims = image.shape
+    # grid_coords = np.meshgrid(*[np.linspace(-1, 1, image_dim) for image_dim in image_dims])
+    # r_map = np.add.reduce(np.power(grid_coords,2.0))
+    # sigma_map = sigma_fun(r_map)
+    # r_dist = r_map[coords]
+    # def sigma_scale(r_dist):
+    #     return (r_dist + 0.01) * 3
+    # for i,sigma in enumerate(sigma_map):
+    #     coords = np.unravel_index(i, image_dims.shape)
+    #     psf_array[coords] = point_spread_function.gaussian(psf_dims,mu,sigma)
+    # return
+
+def variable_gaussian_psf(image, psf_dims, mu_map, sigma_map):
+    fun_map = np.empty(list(image.shape)+list(psf_dims))
+    for i, x in enumerate(np.nditer(image)):
+        coords = np.unravel_index(i, image.shape)
+        # print(x)
+        fun_map[coords] = gaussian(psf_dims,mu_map[coords],sigma_map[coords])
+    return fun_map
+
+def map_of_fun(x_map, fun):
+    fun_map = np.empty(list(x_map.shape)+[x_map.ndim])
+    for i, x in enumerate(np.nditer(x_map)):
+        coords = np.unravel_index(i, x_map.shape)
+        # print(x)
+        fun_map[coords] = fun(x)
+    return fun_map
+
+def radial_map(image):
+    image_dims = image.shape
+    grid_coords = np.meshgrid(*[np.linspace(-1, 1, image_dim) for image_dim in image_dims])
+    return np.add.reduce(np.power(grid_coords,2.0))
+
 def df_to_eigen_psf(df):
     pca_df = pd.DataFrame(pca.transform(df), index=df.index)
     eigen_psfs_list = []
