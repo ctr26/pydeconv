@@ -20,7 +20,7 @@ image = color.rgb2gray(data.astronaut())
 def test_psf_varies():
     psf_image_1 = psf.gaussian(dims=dims, mu=mu, sigma=sigma)
     psf_image_2 = psf.gaussian(dims=dims, mu=mu, sigma=np.divide(sigma,2))
-    error = (psf_image_1 - psf_image_2).flatten().sum()
+    error = (np.abs(psf_image_1 - psf_image_2)).flatten().sum()
     assert error != 0
 
 
