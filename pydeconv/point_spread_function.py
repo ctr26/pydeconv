@@ -1,9 +1,9 @@
-
 from scipy.interpolate import Rbf
 import dask.array as da
 from dask.diagnostics import ProgressBar
 import pandas as pd
 import numpy as np
+
 cropped = None
 coord_list = None
 flat_df = None
@@ -36,43 +36,46 @@ flat_df = None
 
 
 def _gaussian_fun(x, mu, sigma):
-    '''
-    0D guassian function 
-    '''
-    numerator = -np.power(x - mu, 2.)
-    divisior = np.multiply(2,np.power(sigma, 2.))
-    return np.exp(numerator,divisior)
+    """
+    0D guassian function
+    """
+    numerator = -np.power(x - mu, 2.0)
+    divisior = np.multiply(2, np.power(sigma, 2.0))
+    return np.exp(np.divide(numerator, divisior))
+
 
 def _gaussian_1D(x, mu, sigma):
-    '''
+    """
     1D guassian function, takes a line of x values with 0-dim mu and sigma
-    '''
-    mu_x = np.full(x.shape,mu)
-    sigma_x = np.full(x.shape,sigma)
-    return _gaussian_fun(x,mu_x,sigma_x)
-    
+    """
+    mu_x = np.full(x.shape, mu)
+    sigma_x = np.full(x.shape, sigma)
+    return _gaussian_fun(x, mu_x, sigma_x)
+
 
 def _gaussian_nd(dims, mu, sigma):
-    '''
+    """
     Takes image width and produces a guassian psf
-    '''
+    """
     # Create nd meshgrid
     grid_coords = np.meshgrid(*[np.linspace(-1, 1, dim) for dim in dims])
 
     gaussian_mesh_list = []
     # Attempt to zip dims my and sigma
-    zipped_params = list(zip(mu,sigma,dims,grid_coords))
-    for i,zipped_param in enumerate(zipped_params):
+    zipped_params = list(zip(mu, sigma, dims, grid_coords))
+    for i, zipped_param in enumerate(zipped_params):
         # mu_x = np.full(grid_coords[i].shape,zipped_param[0])
         # sigma_x = np.full(grid_coords[i].shape,zipped_param[1])
-        gaussian_mesh_list.append(_gaussian_1D(zipped_param[3],zipped_param[0],zipped_param[1]))
+        gaussian_mesh_list.append(
+            _gaussian_1D(x=zipped_param[3], mu=zipped_param[0], sigma=zipped_param[1])
+        )
     # Unormalised result
-    normalisation = 1/(2*(np.pi)*(np.multiply.reduce(sigma)))
-    return normalisation*np.multiply.reduce(gaussian_mesh_list)
+    normalisation = 1 / (2 * (np.pi) * (np.multiply.reduce(sigma)))
+    return normalisation * np.multiply.reduce(gaussian_mesh_list)
 
-def gaussian(dims=[10,10], mu=[0,0], sigma=[1,1]):
-    return _gaussian_nd(dims,mu,sigma)
 
+def gaussian(dims=[10, 10], mu=[0, 0], sigma=[1, 1]):
+    return _gaussian_nd(dims, mu, sigma)
 
 
 def df_to_eigen_psf(df):
@@ -98,7 +101,8 @@ def df_to_eigen_psf(df):
     # accuracy = cum_sum_exp_var[n_components]
     return eigen_psfs_list
 
-def get_pc_weighting_fun_3D(pca_df,function="cubic"):
+
+def get_pc_weighting_fun_3D(pca_df, function="cubic"):
 
     melt_df_slim = pd.melt(
         pca_df[[pc_component]],
@@ -120,49 +124,55 @@ def get_pc_weighting_fun_3D(pca_df,function="cubic"):
 
     return weighting_function
 
-def get_pc_weighting_fun_3D(pca_df,pc_component,basis_function="cubic",chunks=5):
+
+def get_pc_weighting_fun_3D(pca_df, pc_component, basis_function="cubic", chunks=5):
     x_list = pca_df.index.get_level_values("x")
     y_list = pca_df.index.get_level_values("y")
     z_list = pca_df.index.get_level_values("z")
 
     grid_z_psf, grid_y_psf, grid_x_psf = np.mgrid[
-    min(z_range_psf) : max(z_range_psf),
-    min(y_range_psf) : max(y_range_psf),
-    min(x_range_psf) : max(x_range_psf),
+        min(z_range_psf) : max(z_range_psf),
+        min(y_range_psf) : max(y_range_psf),
+        min(x_range_psf) : max(x_range_psf),
     ]
 
-    rbi_fun = get_pc_weighting_fun_3D(pca_df,function="cubic")
+    rbi_fun = get_pc_weighting_fun_3D(pca_df, function="cubic")
 
     dask_xyzp = da.from_array((grid_z, grid_y, grid_x), chunks=chunks)
 
     with ProgressBar():
-        f = da.map_blocks(
-            rbfi, *dask_xyzp
-        )
+        f = da.map_blocks(rbfi, *dask_xyzp)
     # g = client.persist(f)
     pc_component_weight_map = f.compute()
 
     return weighting_function
 
-def interpolate_pc_weighting(principle_component,coords):
+
+def interpolate_pc_weighting(principle_component, coords):
     weighting = None
     return weighting
 
+
 def getPSFdf():
     # flat = pd.DataFrame(cropped.reshape(cropped.shape[0], -1)).dropna(0).set_index(index)
-    return pd.DataFrame(cropped.reshape(cropped.shape[0], -1)).dropna(0).set_index(index)
+    return (
+        pd.DataFrame(cropped.reshape(cropped.shape[0], -1)).dropna(0).set_index(index)
+    )
+
 
 # def getPSFdf():
 #     # flat = pd.DataFrame(cropped.reshape(cropped.shape[0], -1)).dropna(0).set_index(index)
 #     return flat
 
-def __main__(psf_image,psf_centres, noramlise=True, centre_crop=True):
-    '''
-    Function for giving in a 
-    '''
-    eigen_psf = None # Is a list of coord.shape arrays
-    weighting = None # Weighting is a function that takes *coords
-    return eigen_psf,weighting
+
+def __main__(psf_image, psf_centres, noramlise=True, centre_crop=True):
+    """
+    Function for giving in a
+    """
+    eigen_psf = None  # Is a list of coord.shape arrays
+    weighting = None  # Weighting is a function that takes *coords
+    return eigen_psf, weighting
+
 
 # def __main__(psf_image_array,psf_centres,noramlise=True):
 
