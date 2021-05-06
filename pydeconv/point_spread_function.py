@@ -3,6 +3,10 @@ import dask.array as da
 from dask.diagnostics import ProgressBar
 import pandas as pd
 import numpy as np
+from scipy.sparse import dok_matrix
+from tqdm import tqdm
+import dask
+import scipy
 
 cropped = None
 coord_list = None
@@ -11,7 +15,6 @@ flat_df = None
 # def getEigenPSF(principle_component):
 #     eigen_psfs = pca.components_.reshape((-1, *psf_window))
 #     return eigen_psf
-
 
 # scale = 4.0
 # psf_w = 16
@@ -89,7 +92,7 @@ def variable_psf(image, psf_fun):
     # )
     # r_map = np.add.reduce(np.power(grid_coords, 2.0))
 
-    psf_array = map_of_fun(image,psf_fun)
+    psf_array = map_of_fun(image, psf_fun)
     # psf_array = psf_fun(r_map)
     return psf_array
 
@@ -114,37 +117,43 @@ def variable_psf(image, psf_fun):
 
 #     return variable_psf(image, psf_fun)
 #     # image_dims = image.shape
-    # grid_coords = np.meshgrid(*[np.linspace(-1, 1, image_dim) for image_dim in image_dims])
-    # r_map = np.add.reduce(np.power(grid_coords,2.0))
-    # sigma_map = sigma_fun(r_map)
-    # r_dist = r_map[coords]
-    # def sigma_scale(r_dist):
-    #     return (r_dist + 0.01) * 3
-    # for i,sigma in enumerate(sigma_map):
-    #     coords = np.unravel_index(i, image_dims.shape)
-    #     psf_array[coords] = point_spread_function.gaussian(psf_dims,mu,sigma)
-    # return
+# grid_coords = np.meshgrid(*[np.linspace(-1, 1, image_dim) for image_dim in image_dims])
+# r_map = np.add.reduce(np.power(grid_coords,2.0))
+# sigma_map = sigma_fun(r_map)
+# r_dist = r_map[coords]
+# def sigma_scale(r_dist):
+#     return (r_dist + 0.01) * 3
+# for i,sigma in enumerate(sigma_map):
+#     coords = np.unravel_index(i, image_dims.shape)
+#     psf_array[coords] = point_spread_function.gaussian(psf_dims,mu,sigma)
+# return
+
 
 def variable_gaussian_psf(image, psf_dims, mu_map, sigma_map):
-    fun_map = np.empty(list(image.shape)+list(psf_dims))
+    fun_map = np.empty(list(image.shape) + list(psf_dims))
     for i, x in enumerate(np.nditer(image)):
         coords = np.unravel_index(i, image.shape)
         # print(x)
-        fun_map[coords] = gaussian(psf_dims,mu_map[coords],sigma_map[coords])
+        fun_map[coords] = gaussian(psf_dims, mu_map[coords], sigma_map[coords])
     return fun_map
 
+
 def map_of_fun(x_map, fun):
-    fun_map = np.empty(list(x_map.shape)+[x_map.ndim])
+    fun_map = np.empty(list(x_map.shape) + [x_map.ndim])
     for i, x in enumerate(np.nditer(x_map)):
         coords = np.unravel_index(i, x_map.shape)
         # print(x)
         fun_map[coords] = fun(x)
     return fun_map
 
+
 def radial_map(image):
     image_dims = image.shape
-    grid_coords = np.meshgrid(*[np.linspace(-1, 1, image_dim) for image_dim in image_dims])
-    return np.add.reduce(np.power(grid_coords,2.0))
+    grid_coords = np.meshgrid(
+        *[np.linspace(-1, 1, image_dim) for image_dim in image_dims]
+    )
+    return np.add.reduce(np.power(grid_coords, 2.0))
+
 
 def df_to_eigen_psf(df):
     pca_df = pd.DataFrame(pca.transform(df), index=df.index)
@@ -232,14 +241,115 @@ def getPSFdf():
 #     # flat = pd.DataFrame(cropped.reshape(cropped.shape[0], -1)).dropna(0).set_index(index)
 #     return flat
 
+def psf_to_H(psf_array,method="dask"):
+    if method=="dask": return  psf_to_H_dask(psf_array)
+    # if method=="linear": return  psf_to_H_dask(psf_array)
+    return  psf_to_H_slow(psf_array)
 
-def __main__(psf_image, psf_centres, noramlise=True, centre_crop=True):
+def psf_to_H_slow(psf_array):
+    """ Takes and ND psf array (image_coords,psf_coords)"""
+    ### Very slow way of doing this, could dask it.
+    # Assumes that there are as many dimensions in the PSF as there are in the image
+    # Unsure if this is faulty
+    # dims = int(np.divide(len(psf_array.shape), 2))
+    # image_shape = psf_array.shape[0:dims]
+    # psf_shape = psf_array.shape[dims:]
+    
+    image_shape,psf_shape = get_shapes_from_psf(psf_array)
+
+    N_v = np.multiply.reduce(image_shape)
+    # Faulty assumption that N_v equals N_p but ok for now
+    N_p = np.multiply.reduce(image_shape)
+
+    # measurement_matrix = dok_matrix((N_v, N_p))
+    for i in tqdm(np.arange(N_v)):
+        coords = np.unravel_index(i, image_shape)
+        current_psf = psf_array[coords]
+        # Get the xy coordinates of the ith pixel in the original image
+        delta_image = np.zeros(image_shape)
+        # if method == "convolve":
+        delta_image[coords] = 1
+        delta_PSF = scipy.ndimage.convolve(
+            delta_image, current_psf
+        )  # Convolve PSF with a image with a single 1 at coord
+        # if method == "put":
+            # delta_PSF = put_centre(delta_image, current_psf, coords)
+        measurement_matrix[i, :] = delta_image.flatten()
+    return measurement_matrix
+
+import sparse
+
+def psf_to_H_dask(psf_array):
+    # dims = int(np.divide(len(psf_array.shape), 2))
+    # image_shape = psf_array.shape[0:dims]
+    # psf_shape = psf_array.shape[dims:]
+
+    image_shape,psf_shape = get_shapes_from_psf(psf_array)
+
+    N_v = np.multiply.reduce(image_shape)
+    # Faulty assumption that N_v equals N_p but ok for now
+    N_p = np.multiply.reduce(image_shape)
+
+    dask_list = []
+    delayed_psf_array = dask.delayed(psf_array)
+    for i in tqdm(np.arange(N_v)):
+        # delta_PSF = get_psf_at_coord(psf_array,coord)
+        coord = np.unravel_index(i,image_shape)
+        delta_dask = dask.delayed(get_psf_at_coord)(delayed_psf_array,coord)
+        array_da = da.from_delayed(delta_dask,
+                                shape=image_shape,
+                                dtype=float)
+        # delta_dask_flat = array_da.flatten()
+        # sparse_da = delta_dask_flat.map_blocks(sparse.COO)
+        # delta_dask_sparse = dask.delayed(dok_matrix)(delta_dask_flat)
+        dask_list.append(array_da.flatten())
+    # stack = dask.array.concatenate(dask_list,axis=0)
+
+    stack = dask.array.stack(dask_list)
+    stack = stack.map_blocks(sparse.COO)
+    with ProgressBar():
+        out = stack.compute()
+    return out
+
+def get_shapes_from_psf(psf_array):
+    dims = int(np.divide(len(psf_array.shape), 2))
+    image_shape = psf_array.shape[0:dims]
+    psf_shape = psf_array.shape[dims:]
+    return image_shape,psf_shape
+
+def get_psf_at_coord(psf_array,coord):
+    # dims = int(np.divide(len(psf_array.shape), 2))
+    # image_shape = psf_array.shape[0:dims]
+    # psf_shape = psf_array.shape[dims:]
+
+    image_shape,psf_shape = get_shapes_from_psf(psf_array)
+
+    # coord = np.unravel_index(i, image_shape)
+    current_psf = psf_array[coord]
+    # Get the xy coordinates of the ith pixel in the original image
+    delta_image = np.zeros(image_shape)
+    # if method == "convolve":
+    delta_image[coord] = 1
+    delta_PSF = scipy.ndimage.convolve(
+        delta_image, current_psf
+    )  # Convolve PSF with a image with a single 1 at coord
+    # if method == "put":
+    #     delta_PSF = put_centre(delta_image, current_psf, coord)
+    return delta_PSF
+
+def put_centre(array, inset, coord, mode="clip"):
+    put_coord = coord - np.floor(np.divide(inset.shape, 2)).astype(int)
+    np.put(array, put_coord, inset, mode=mode)
+    return array
+
+
+def __main__(psf_image, psf_centres, normalise=True, centre_crop=True):
     """
     Function for giving in a
     """
     eigen_psf = None  # Is a list of coord.shape arrays
     weighting = None  # Weighting is a function that takes *coords
-    return eigen_psf, weighting
+    return eigen_psf, weightingstack
 
 
 # def __main__(psf_image_array,psf_centres,noramlise=True):
