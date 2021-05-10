@@ -247,14 +247,14 @@ def psf_to_H(psf_array,method="dask"):
     return  psf_to_H_slow(psf_array)
 
 def psf_to_H_slow(psf_array):
-    """ Takes and ND psf array (image_coords,psf_coords)"""
+    """ Takes an ND psf array (image_coords,psf_coords)"""
     ### Very slow way of doing this, could dask it.
     # Assumes that there are as many dimensions in the PSF as there are in the image
     # Unsure if this is faulty
     # dims = int(np.divide(len(psf_array.shape), 2))
     # image_shape = psf_array.shape[0:dims]
     # psf_shape = psf_array.shape[dims:]
-    
+
     image_shape,psf_shape = get_shapes_from_psf(psf_array)
 
     N_v = np.multiply.reduce(image_shape)
