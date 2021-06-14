@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 # pydeconv
 Python package for scalable micrograph deconvolution with spatially varying point spread functions
+=======
+# Binomial-splitting: estimating the optimal iteration number in image reconstruction
+Employ binomial splitting to create two stochastically independent images from a single measure image.
+>>>>>>> 59cfad1 (Update README.md)
 
 <<<<<<< HEAD
 ## Build
