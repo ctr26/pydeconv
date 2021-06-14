@@ -7,6 +7,4 @@ Python package for scalable micrograph deconvolution with spatially varying poin
 ## Install
   make install
 
-## Test
-  make test
-=======
+When to stop an iterative image reconstruction? Especially when only a single noisy image has been recoreded.
