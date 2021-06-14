@@ -1,4 +1,4 @@
-# Binomial-splitting
+# Binomial-splitting: estimating the optimal iteration number in image reconstruction
 Employ binomial splitting to create two stochastically independent images from a single measure image.
 
 Disclaimer!
