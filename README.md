@@ -1,4 +1,3 @@
-
 # pydeconv
 Python package for scalable micrograph deconvolution with spatially varying point spread functions
 
