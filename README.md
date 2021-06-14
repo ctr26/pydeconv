@@ -1,5 +1,4 @@
-# Binomial-splitting: estimating the optimal iteration number in image reconstruction
-Employ binomial splitting to create two stochastically independent images from a single measure image.
+# Binomial-splitting: When to stop iterative image reconstruction?
 
 Disclaimer!
 The presented idea is based on thoughts of Andrew York (@AndrewGYork; andrew.g.york+github@gmail.com), whos thoughts I then followed up. The presented code is written in MATLAB using the DipImage toolbox ([here](https://diplib.org/)). A Python version is to be added soon.
