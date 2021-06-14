@@ -1,7 +1,7 @@
 # Binomial-splitting: When to stop iterative image reconstruction?
 
 Disclaimer!
-The presented idea is based on thoughts of Andrew York (@AndrewGYork; andrew.g.york+github@gmail.com), whos thoughts I then followed up. The presented code is written in MATLAB using the DipImage toolbox ([here](https://diplib.org/)). A Python version is to be added soon.
+The presented idea is based on thoughts of Andrew York (@AndrewGYork; andrew.g.york+github@gmail.com), who's thoughts I then followed up and discussed with Craig Russel (@microRussel; ctr26@ebi.ac.uk). The presented code is written in MATLAB using the DipImage toolbox ([here](https://diplib.org/)). A Python version is to be added soon (.
 
 When to stop an iterative image reconstruction? Especially when only a single noisy image has been recoreded.
 For example: lets suppose we want to deconvolve a shot-noise corrupted image using the Richardson-Lucy algorithm ([Wikipedia:Richardson_Lucy](https://en.wikipedia.org/wiki/Richardson%E2%80%93Lucy_deconvolution)). The only parameter we really need to adjust is the number of iterations. If we set it too low, we wont achieve much improvement in terms of reconstructing the underyling sample distribution. When set to high the resulting reconstruction will exhibit amplified noise artifacts, simply because the iterative reconstruction starts to fit the recorded noise as image structure. A compromise is often achieved by manually changing  the number of iterations and visually inspecting the results. 
