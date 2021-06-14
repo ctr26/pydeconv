@@ -19,11 +19,15 @@ Employ binomial splitting to create two stochastically independent images from a
 =======
 Disclaimer!
 <<<<<<< HEAD
+<<<<<<< HEAD
 The presented idea is based on thoughts of Andrew York (@AndrewGYork; andrew.g.york+github@gmail.com), whos thoughts I then followed up.
 >>>>>>> 2e1b897 (Update README.md)
 =======
 The presented idea is based on thoughts of Andrew York (@AndrewGYork; andrew.g.york+github@gmail.com), whos thoughts I then followed up. The presented code is written in MATLAB using the DipImage toolbox ([here](https://diplib.org/)). A Python version is to be added soon.
 >>>>>>> 7a3f90f (Update README.md)
+=======
+The presented idea is based on thoughts of Andrew York (@AndrewGYork; andrew.g.york+github@gmail.com), who's thoughts I then followed up and discussed with Craig Russel (@microRussel; ctr26@ebi.ac.uk). The presented code is written in MATLAB using the DipImage toolbox ([here](https://diplib.org/)). A Python version is to be added soon (.
+>>>>>>> 62fb3c9 (Update README.md)
 
 When to stop an iterative image reconstruction? Especially when only a single noisy image has been recoreded.
 <<<<<<< HEAD
