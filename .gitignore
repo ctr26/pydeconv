@@ -50,3 +50,9 @@ coverage.xml
 docs/_build/
 .history
 .vscode
+*.npy
+
+# Sphinx documentation
+docs/_build/
+.history
+.vscode
