@@ -1,0 +1,17 @@
+{
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "*test.py"
+    ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.unittestEnabled": false,
+    "python.pythonPath": "/home/ctr26/miniconda3/envs/pydeconv/bin/python",
+    "python.formatting.provider": "black",
+    "python.testing.pytestArgs": [
+        "tests"
+    ]
+}
