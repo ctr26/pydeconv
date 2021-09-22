@@ -1,3 +1,5 @@
+import numpy as np
+import matplotlib.pyplot as plt
 
 def scaleImage(image, dtype=np.uint8):
     image = np.array(image)
@@ -19,14 +21,14 @@ def cropND(img, centre, window):
     #     l = (centre[-(i + 1)] - np.floor(centre_dist[-(i + 1)])).astype(int)
     #     r = (centre[-(i + 1)] + np.ceil(centre_dist[-(i + 1)])).astype(int)
 
-    x_l = (centre[-1] - np.floor(centre_dist[-1])).astype(int)
-    x_r = (centre[-1] + np.ceil(centre_dist[-1])).astype(int)
+    x_l = (centre[2] - np.floor(centre_dist[2])).astype(int)
+    x_r = (centre[2] + np.ceil(centre_dist[2])).astype(int)
 
-    y_l = (centre[-2] - np.floor(centre_dist[-2])).astype(int)
-    y_r = (centre[-2] + np.ceil(centre_dist[-2])).astype(int)
+    y_l = (centre[1] - np.floor(centre_dist[1])).astype(int)
+    y_r = (centre[1] + np.ceil(centre_dist[1])).astype(int)
 
-    z_l = (centre[-3] - np.floor(centre_dist[-3])).astype(int)
-    z_r = (centre[-3] + np.ceil(centre_dist[-3])).astype(int)
+    z_l = (centre[0] - np.floor(centre_dist[0])).astype(int)
+    z_r = (centre[0] + np.ceil(centre_dist[0])).astype(int)
     # try:
     #     return util.crop(img,((z_l,z_r),(y_l,y_r),(x_l,x_r)))
     # except :
@@ -34,14 +36,13 @@ def cropND(img, centre, window):
 
     return img[z_l:z_r, y_l:y_r, x_l:x_r]
 
-
-def cropNDv(img, centres, window=[20, 40, 40]):
+def cropNDv(img, centres, window=[120, 40, 40]):
     cropped_list = np.full((len(centres), *window), np.nan)
     i = 0
     centres_list = []
     for centre in centres:
         try:
-            cropped_list[i, :, :, :] = cropND(img, centre, window=window)
+            cropped_list[i , :, :, :] = cropND(img, centre, window=window)
             centres_list.append(centres[i])
             i += 1
         except:
@@ -53,4 +54,4 @@ def xyz_viewer(im):
     ax[0].imshow(np.max(im, axis=0))
     ax[1].imshow(np.max(im, axis=1))
     ax[2].imshow(np.max(im, axis=2))
-    plt.show()
+    return fig
