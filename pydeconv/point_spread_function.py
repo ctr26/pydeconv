@@ -568,6 +568,9 @@ def psf_to_H(psf_array, method="dask"):
     # if method=="linear": return  psf_to_H_dask(psf_array)
     return psf_to_H_slow(psf_array)
 
+def blur_image_with_H(image,H):
+    return H.dot(image.flatten()).reshape(image.shape)
+
 
 def psf_df_pca(df, pca=PCA(n_components=0.99)):
     pca = pca.fit(df)
