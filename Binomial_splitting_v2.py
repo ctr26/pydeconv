@@ -469,4 +469,4 @@ if False:
 		plt.title('Permutation ' + str(l+1),fontsize=8)
 		#plt.gca().axes.xaxis.set_ticks([]);plt.gca().axes.yaxis.set_ticks([])
 		plt.grid('on');	plt.tight_layout()
-	plt.savefig('Fig0b.p
+	plt.savefig('Fig0b.p')
