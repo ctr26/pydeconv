@@ -277,7 +277,40 @@ est_history = np.repeat(est_history[np.newaxis],Niter,axis=0)
 
 	est_history[l,:,:] = est
 # %%
+if save_images:
+    # directory = os.path.join(out_dir,"est_history")
+    def save_images(image_array,directory=""):
+        for iteration,image in enumerate(image_array):
+            Path(directory).mkdir(parents=True, exist_ok=True)
+            io.imsave(os.path.join(directory,f"{iteration:05}.tif"),image)
+            # io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
+            try:
+                Image.fromarray(image).convert("L").save(os.path.join(directory,f"{iteration:05}.png"))
+                io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
+            except:
+                None
+    save_images(est_history,os.path.join(out_dir,"est_history"))
+    save_images(est_split_history,os.path.join(out_dir,"est_split_history"))
 
+if not(generate_images):
+    # directory = os.path.join(out_dir,"est_history")
+    def load_images(directory=""):        
+        path = os.path.join(directory,"*.tif")
+        files = glob.glob(path)
+        img_list = []
+        for iteration,file in enumerate(files):
+            img = np.array(Image.open(file))
+            img_list.append(img)
+        return np.array(img_list)
+    est_history = load_images(os.path.join(out_dir,"est_history"))
+    est_split_history = load_images( os.path.join(out_dir,"est_split_history"))
+
+    # for l in est_history
+    # path = os.path.join(est_history,"est_history",iteration)
+    # save_images(est_split_history,out_dir)
+# if not(generate_images):
+    # est_history = load_images(out_dir)
+    # est_split_history = load_images(out_dir)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Calculate and display different criteria
 if do_analysis:
