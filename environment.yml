@@ -1,0 +1,29 @@
+name: py38
+channels:
+  - bioconda
+  - pytorch
+  - idr
+  - ome
+  - conda-forge
+  - defaults
+dependencies:
+  - hdf5
+  - zarr
+  - pillow
+  - scipy
+  - ipykernel
+  - numpy
+  - pims
+  - python=3.8
+  - rclone
+  - matplotlib
+  - scikit-image
+  - jpype1
+  - tqdm
+  - distributed
+  - dask
+  - ipywidgets
+  - scikit-learn
+  - pip
+  - pandas
+  - seaborn
