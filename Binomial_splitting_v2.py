@@ -164,7 +164,6 @@ numPixel = (256,256)
 midPos = (128,128)
 pxSize = (0.04,0.04)
 simSize = np.multiply(numPixel,pxSize)
-NA = 0.8
 n = 1.00
 lambda0 = 0.520
 seed = 10
@@ -204,78 +203,78 @@ np.random.seed(seed)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Compute PSF, object and image
 if generate_images:
+    
+    # The point-spread-function
+    apsf = jincPSF(numPixel,midPos,pxSize,lambda0,NA)
+    pupil = ft2d(apsf)
+    kAbbe = AbbeRadiusFromPupil(pupil,midPos)
+    psf = abssqr(apsf)
+    psf = psf / np.sum(psf) * np.sqrt(np.size(psf))
 
-# The point-spread-function
-apsf = jincPSF(numPixel,midPos,pxSize,lambda0,NA)
-pupil = ft2d(apsf)
-kAbbe = AbbeRadiusFromPupil(pupil,midPos)
-psf = abssqr(apsf)
-psf = psf / np.sum(psf) * np.sqrt(np.size(psf))
+    # Generate groundtruth object
+    obj = CreateObject(objName,numPixel,midPos) 
+    obj = obj/np.max(obj) * maxPhotons
 
-# Generate groundtruth object
-obj = CreateObject(objName,numPixel,midPos) 
-obj = obj/np.max(obj) * maxPhotons
+    # Forward and backwards model
+    otf = ft2d(psf)
+    fwd = lambda x: np.real(ift2d(ft2d(x) * otf))
+    bwd = lambda x: np.real(ift2d(ft2d(x) * np.conj(otf)))
 
-# Forward and backwards model
-otf = ft2d(psf)
-fwd = lambda x: np.real(ift2d(ft2d(x) * otf))
-bwd = lambda x: np.real(ift2d(ft2d(x) * np.conj(otf)))
+    # Obtain image information
+    img = fwd(obj)
 
-# Obtain image information
-img = fwd(obj)
-
-# Apply shot noise
-img = np.random.poisson(img).astype('int32')
+    # Apply shot noise
+    img = np.random.poisson(img).astype('int32')
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #%% Perform binomial splitting
 
-img_T = np.random.binomial(img,0.5)
-img_V = img - img_T
+    img_T = np.random.binomial(img,0.5)
+    img_V = img - img_T
 
-# Pack into a nice format and remove 
-img_split = cat((img_T,img_V))
+    # Pack into a nice format and remove 
+    img_split = cat((img_T,img_V))
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Niter = 200
-# Choose initialization: 1) average value as constant; 2) further blurred image
-est_split = np.ones_like(img_split) * np.mean(img_split,axis=(1,2),keepdims=True) 	 	# 1)
-#est_split = fwd(img_split)																# 2)
+    Niter = 200
+    # Choose initialization: 1) average value as constant; 2) further blurred image
+    est_split = np.ones_like(img_split) * np.mean(img_split,axis=(1,2),keepdims=True) 	 	# 1)
+    #est_split = fwd(img_split)																# 2)
 
-# Define variable that saves the reconstruction in each iteration
-est_split_history = np.zeros_like(est_split)
-est_split_history = np.repeat(est_split_history[np.newaxis],Niter,axis=0)
+    # Define variable that saves the reconstruction in each iteration
+    est_split_history = np.zeros_like(est_split)
+    est_split_history = np.repeat(est_split_history[np.newaxis],Niter,axis=0)
 
-# Richardson-Lucy deconvolution of split data
+    # Richardson-Lucy deconvolution of split data
     for l in tqdm(np.arange(0,Niter)):
-	convEst = fwd(est_split)
-	ratio = img_split / (convEst + 1e-12)
-	convRatio = bwd(ratio)
-	convRatio = convRatio / bwd(np.ones_like(img))
-	est_split = est_split*convRatio; 
+        convEst = fwd(est_split)
+        ratio = img_split / (convEst + 1e-12)
+        convRatio = bwd(ratio)
+        convRatio = convRatio / bwd(np.ones_like(img))
+        est_split = est_split*convRatio; 
 
-	est_split_history[l] = est_split
+        est_split_history[l] = est_split
 
-# Reshapeing size of img split for later
-img_split = np.transpose(np.repeat(img_split[:,np.newaxis,:,:],Niter,axis=1),axes=(1,0,2,3))
+    # Reshapeing size of img split for later
+    img_split = np.transpose(np.repeat(img_split[:,np.newaxis,:,:],Niter,axis=1),axes=(1,0,2,3))
 
-# # Choose initialization: 1) average value as constant; 2) further blurred image
-est = np.ones_like(img) + np.mean(img)												# 1)
-#est = fwd(img)																		# 2)
+    # # Choose initialization: 1) average value as constant; 2) further blurred image
+    est = np.ones_like(img) + np.mean(img)												# 1)
+    #est = fwd(img)																		# 2)
 
-# Define variable that saves the reconstruction in each iteration
-est_history = np.zeros_like(est)
-est_history = np.repeat(est_history[np.newaxis],Niter,axis=0)
+    # Define variable that saves the reconstruction in each iteration
+    est_history = np.zeros_like(est)
+    est_history = np.repeat(est_history[np.newaxis],Niter,axis=0)
 
-# Richardson-Lucy deconvolution of non-split data
+    # Richardson-Lucy deconvolution of non-split data
     for l in tqdm(np.arange(0,Niter)):
-	convEst = fwd(est)
-	ratio = img / (convEst + 1e-12)
-	convRatio = bwd(ratio)
-	convRatio = convRatio / bwd(np.ones_like(img))
-	est = est * convRatio; 
+        convEst = fwd(est)
+        ratio = img / (convEst + 1e-12)
+        convRatio = bwd(ratio)
+        convRatio = convRatio / bwd(np.ones_like(img))
+        est = est * convRatio; 
 
-	est_history[l,:,:] = est
+        est_history[l,:,:] = est
 # %%
 if save_images:
     # directory = os.path.join(out_dir,"est_history")
@@ -314,231 +313,231 @@ if not(generate_images):
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Calculate and display different criteria
 if do_analysis:
-LogLikelihood =  np.sum( -fwd(est_split_history) + img_split[:,::+1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
-PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
-NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
-CrossEntropyLoss = np.sum( est_split_history[:,::-1] * np.log(est_split_history[:,::+1]+1e-12),axis=(1,2,3))
+    LogLikelihood =  np.sum( -fwd(est_split_history) + img_split[:,::+1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
+    PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
+    NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
+    CrossEntropyLoss = np.sum( est_split_history[:,::-1] * np.log(est_split_history[:,::+1]+1e-12),axis=(1,2,3))
 
-plt.figure()
-ax = plt.subplot(2,2,1)
-plt.plot(LogLikelihood,'g-')
-plt.grid('on')
-plt.gca().axes.yaxis.set_ticks([])
-plt.xlabel('Iteration number',fontsize=10)
-plt.ylabel('Log. likelihood',fontsize=10)
-plt.title('Without binomial splitting',fontsize=8)
-plt.xlim(0,Niter)
-ax = plt.subplot(2,2,2)
-plt.plot(PoissonLoss,'k-')
-plt.grid('on')
-plt.gca().axes.yaxis.set_ticks([])
-plt.xlabel('Iteration number',fontsize=10)
-plt.ylabel('Log. likelihood',fontsize=10)
-plt.title('With binomial splitting',fontsize=8)
-plt.xlim(0,Niter)
-plt.subplot(2,2,3,sharex=ax)
-plt.plot(CrossEntropyLoss,'b-')
-plt.xlabel('Iteration number',fontsize=10)
-plt.ylabel('Cross entropy',fontsize=10)
-plt.grid('on')
-plt.gca().axes.yaxis.set_ticks([])
-plt.title('With binomial splitting',fontsize=8)
-plt.xlim(0,Niter)
-plt.subplot(2,2,4,sharex=ax)
-plt.plot(NCCLoss,'r-')
-plt.xlabel('Iteration number',fontsize=10)
-plt.ylabel('Cross-correlation',fontsize=10)
-plt.gca().axes.yaxis.set_ticks([])
-plt.grid('on')
-plt.title('Knowing groundtruth object',fontsize=8)
-plt.xlim(0,Niter)
-plt.tight_layout()
+    plt.figure()
+    ax = plt.subplot(2,2,1)
+    plt.plot(LogLikelihood,'g-')
+    plt.grid('on')
+    plt.gca().axes.yaxis.set_ticks([])
+    plt.xlabel('Iteration number',fontsize=10)
+    plt.ylabel('Log. likelihood',fontsize=10)
+    plt.title('Without binomial splitting',fontsize=8)
+    plt.xlim(0,Niter)
+    ax = plt.subplot(2,2,2)
+    plt.plot(PoissonLoss,'k-')
+    plt.grid('on')
+    plt.gca().axes.yaxis.set_ticks([])
+    plt.xlabel('Iteration number',fontsize=10)
+    plt.ylabel('Log. likelihood',fontsize=10)
+    plt.title('With binomial splitting',fontsize=8)
+    plt.xlim(0,Niter)
+    plt.subplot(2,2,3,sharex=ax)
+    plt.plot(CrossEntropyLoss,'b-')
+    plt.xlabel('Iteration number',fontsize=10)
+    plt.ylabel('Cross entropy',fontsize=10)
+    plt.grid('on')
+    plt.gca().axes.yaxis.set_ticks([])
+    plt.title('With binomial splitting',fontsize=8)
+    plt.xlim(0,Niter)
+    plt.subplot(2,2,4,sharex=ax)
+    plt.plot(NCCLoss,'r-')
+    plt.xlabel('Iteration number',fontsize=10)
+    plt.ylabel('Cross-correlation',fontsize=10)
+    plt.gca().axes.yaxis.set_ticks([])
+    plt.grid('on')
+    plt.title('Knowing groundtruth object',fontsize=8)
+    plt.xlim(0,Niter)
+    plt.tight_layout()
 
-max_LogLikelihood = np.argmax(LogLikelihood)
-max_PoissonLoss = np.argmax(PoissonLoss)
-max_NCCLoss = np.argmax(NCCLoss)
-max_CrossEntropyLoss = np.argmax(CrossEntropyLoss)
+    max_LogLikelihood = np.argmax(LogLikelihood)
+    max_PoissonLoss = np.argmax(PoissonLoss)
+    max_NCCLoss = np.argmax(NCCLoss)
+    max_CrossEntropyLoss = np.argmax(CrossEntropyLoss)
 
-plt.subplot(2,2,1); plt.plot(max_LogLikelihood,LogLikelihood[max_LogLikelihood],'go',mfc='none');
-plt.subplot(2,2,2); plt.plot(max_PoissonLoss,PoissonLoss[max_PoissonLoss],'ko',mfc='none'); 
-plt.subplot(2,2,3); plt.plot(max_CrossEntropyLoss,CrossEntropyLoss[max_CrossEntropyLoss],'bo',mfc='none');
-plt.subplot(2,2,4); plt.plot(max_NCCLoss,NCCLoss[max_NCCLoss],'ro',mfc='none'); 
-if doPrint:
-	plt.savefig('Fig1.png', dpi = 300)
+    plt.subplot(2,2,1); plt.plot(max_LogLikelihood,LogLikelihood[max_LogLikelihood],'go',mfc='none');
+    plt.subplot(2,2,2); plt.plot(max_PoissonLoss,PoissonLoss[max_PoissonLoss],'ko',mfc='none'); 
+    plt.subplot(2,2,3); plt.plot(max_CrossEntropyLoss,CrossEntropyLoss[max_CrossEntropyLoss],'bo',mfc='none');
+    plt.subplot(2,2,4); plt.plot(max_NCCLoss,NCCLoss[max_NCCLoss],'ro',mfc='none'); 
+    if doPrint:
+        plt.savefig('Fig1.png', dpi = 300)
 
-print('Ideal iteration number:')
-print('NCC:  ' + str(max_NCCLoss))
-print('Cross entropy:  ' + str(max_CrossEntropyLoss) + '; relative error [%]:  ' + str((max_CrossEntropyLoss-max_NCCLoss)/max_NCCLoss*100))
-print('Poisson Loss:  ' + str(max_PoissonLoss) + '; relative error [%]:  ' + str((max_PoissonLoss-max_NCCLoss)/max_NCCLoss*100))
-
-
-# Save best deconvolution result for display
-deconv = est_history[max_NCCLoss,:,:]
-max_optim = max_PoissonLoss
-deconv_split = np.sum(est_split_history[max_optim],axis=0)
+    print('Ideal iteration number:')
+    print('NCC:  ' + str(max_NCCLoss))
+    print('Cross entropy:  ' + str(max_CrossEntropyLoss) + '; relative error [%]:  ' + str((max_CrossEntropyLoss-max_NCCLoss)/max_NCCLoss*100))
+    print('Poisson Loss:  ' + str(max_PoissonLoss) + '; relative error [%]:  ' + str((max_PoissonLoss-max_NCCLoss)/max_NCCLoss*100))
 
 
-plt.figure()
-ax1 = plt.subplot(231)
-plt.imshow(img,cmap='viridis')
-plt.axis('off')
-plt.title('Image',fontsize=10)
-plt.subplot(232,sharex=ax1,sharey=ax1)
-plt.imshow(img_T,cmap='viridis')
-plt.axis('off')
-plt.title('Split image 1',fontsize=10)
-plt.subplot(233,sharex=ax1,sharey=ax1)
-plt.imshow(img_V,cmap='viridis')
-plt.axis('off')
-plt.title('Split image 2',fontsize=10)
-plt.subplot(234,sharex=ax1,sharey=ax1)
-plt.imshow(obj,cmap='viridis')
-plt.axis('off')
-plt.title('Groundtruth',fontsize=10)
-plt.subplot(235,sharex=ax1,sharey=ax1)
-plt.imshow(deconv,cmap='viridis')
-plt.axis('off')
-plt.title('Knowing groundtruth',fontsize=10)
-plt.subplot(236,sharex=ax1,sharey=ax1)
-plt.imshow(deconv_split,cmap='viridis')
-plt.axis('off')
-plt.title('Binomial splitting',fontsize=10)
-plt.tight_layout()
-if doPrint:
-	plt.savefig('Fig2.png', dpi = 300)
-
-if objName == 'test_target':
-	X = np.arange(0,np.shape(obj)[0])*pxSize[0]
-	plt.figure()
-	ax=plt.subplot(313)
-	plt.plot(X,obj[:,midPos[1]],color='0.5')
-	plt.plot(X,deconv[:,midPos[1]],'r-')
-	plt.xlim(0,np.shape(obj)[0]*pxSize[0])
-	plt.xlabel('x-coordinate / (µm)',fontsize=10)
-	plt.ylabel('Signal',fontsize=10)
-	plt.title('Knowing groundtruth object',fontsize=8)
-	plt.grid('on')
-	plt.subplot(312,sharex=ax,sharey=ax)
-	plt.plot(X,obj[:,midPos[1]],color='0.5')
-	plt.plot(X,deconv_split[:,midPos[1]],'b-')
-	plt.xlim(0,np.shape(obj)[0]*pxSize[0])
-	plt.xlabel('x-coordinate / (µm)',fontsize=10)
-	plt.ylabel('Signal',fontsize=10)
-	plt.title('Cross-entropy criterion',fontsize=8)
-	plt.grid('on')
-	plt.subplot(311,sharex=ax,sharey=ax)
-	plt.plot(X,obj[:,midPos[1]],color='0.5')
-	plt.plot(X,deconv_split[:,midPos[1]],'k-')
-	plt.xlim(0,np.shape(obj)[0]*pxSize[0])
-	plt.xlabel('x-coordinate / (µm)',fontsize=10)
-	plt.ylabel('Signal',fontsize=10)
-	plt.title('Log. likelihood criterion',fontsize=8)
-	plt.grid('on')
-	plt.tight_layout()
-	if doPrint:
-		plt.savefig('Fig5a.png', dpi = 300)
-
-	plt.figure()
-	ax=plt.subplot(313)
-	plt.plot(X,obj[:,int(midPos[1]/4)],color='0.5')
-	plt.plot(X,deconv[:,int(midPos[1]/4)],'r-')
-	plt.xlim(0,np.shape(obj)[0]*pxSize[0])
-	plt.xlabel('x-coordinate / (µm)',fontsize=10)
-	plt.ylabel('Signal',fontsize=10)
-	plt.title('Knowing groundtruth object',fontsize=8)
-	plt.grid('on')
-	plt.subplot(312,sharex=ax,sharey=ax)
-	plt.plot(X,obj[:,int(midPos[1]/4)],color='0.5')
-	plt.plot(X,deconv_split[:,int(midPos[1]/4)],'b-')
-	plt.xlim(0,np.shape(obj)[0]*pxSize[0])
-	plt.xlabel('x-coordinate / (µm)',fontsize=10)
-	plt.ylabel('Signal',fontsize=10)
-	plt.title('Cross-entropy criterion',fontsize=8)
-	plt.grid('on')
-	plt.subplot(311,sharex=ax,sharey=ax)
-	plt.plot(X,obj[:,int(midPos[1]/4)],color='0.5')
-	plt.plot(X,deconv_split[:,int(midPos[1]/4)],'k-')
-	plt.xlim(0,np.shape(obj)[0]*pxSize[0])
-	plt.xlabel('x-coordinate / (µm)',fontsize=10)
-	plt.ylabel('Signal',fontsize=10)
-	plt.title('Log. likelihood criterion',fontsize=8)
-	plt.grid('on')
-	plt.tight_layout()
-	if doPrint:
-		plt.savefig('Fig5b.png', dpi = 300)
+    # Save best deconvolution result for display
+    deconv = est_history[max_NCCLoss,:,:]
+    max_optim = max_PoissonLoss
+    deconv_split = np.sum(est_split_history[max_optim],axis=0)
 
 
-# Compute Fourier error
-myMask = rr(numPixel,numPixel) < 2*kAbbe
-FTest_history = ft2d(est_history)# * myMask
-FTobj = ft2d(obj)  #* myMask
+    plt.figure()
+    ax1 = plt.subplot(231)
+    plt.imshow(img,cmap='viridis')
+    plt.axis('off')
+    plt.title('Image',fontsize=10)
+    plt.subplot(232,sharex=ax1,sharey=ax1)
+    plt.imshow(img_T,cmap='viridis')
+    plt.axis('off')
+    plt.title('Split image 1',fontsize=10)
+    plt.subplot(233,sharex=ax1,sharey=ax1)
+    plt.imshow(img_V,cmap='viridis')
+    plt.axis('off')
+    plt.title('Split image 2',fontsize=10)
+    plt.subplot(234,sharex=ax1,sharey=ax1)
+    plt.imshow(obj,cmap='viridis')
+    plt.axis('off')
+    plt.title('Groundtruth',fontsize=10)
+    plt.subplot(235,sharex=ax1,sharey=ax1)
+    plt.imshow(deconv,cmap='viridis')
+    plt.axis('off')
+    plt.title('Knowing groundtruth',fontsize=10)
+    plt.subplot(236,sharex=ax1,sharey=ax1)
+    plt.imshow(deconv_split,cmap='viridis')
+    plt.axis('off')
+    plt.title('Binomial splitting',fontsize=10)
+    plt.tight_layout()
+    if doPrint:
+        plt.savefig('Fig2.png', dpi = 300)
 
-FTError = abssqr( FTest_history  - FTobj)
+    if objName == 'test_target':
+        X = np.arange(0,np.shape(obj)[0])*pxSize[0]
+        plt.figure()
+        ax=plt.subplot(313)
+        plt.plot(X,obj[:,midPos[1]],color='0.5')
+        plt.plot(X,deconv[:,midPos[1]],'r-')
+        plt.xlim(0,np.shape(obj)[0]*pxSize[0])
+        plt.xlabel('x-coordinate / (µm)',fontsize=10)
+        plt.ylabel('Signal',fontsize=10)
+        plt.title('Knowing groundtruth object',fontsize=8)
+        plt.grid('on')
+        plt.subplot(312,sharex=ax,sharey=ax)
+        plt.plot(X,obj[:,midPos[1]],color='0.5')
+        plt.plot(X,deconv_split[:,midPos[1]],'b-')
+        plt.xlim(0,np.shape(obj)[0]*pxSize[0])
+        plt.xlabel('x-coordinate / (µm)',fontsize=10)
+        plt.ylabel('Signal',fontsize=10)
+        plt.title('Cross-entropy criterion',fontsize=8)
+        plt.grid('on')
+        plt.subplot(311,sharex=ax,sharey=ax)
+        plt.plot(X,obj[:,midPos[1]],color='0.5')
+        plt.plot(X,deconv_split[:,midPos[1]],'k-')
+        plt.xlim(0,np.shape(obj)[0]*pxSize[0])
+        plt.xlabel('x-coordinate / (µm)',fontsize=10)
+        plt.ylabel('Signal',fontsize=10)
+        plt.title('Log. likelihood criterion',fontsize=8)
+        plt.grid('on')
+        plt.tight_layout()
+        if doPrint:
+            plt.savefig('Fig5a.png', dpi = 300)
 
-N = np.arange(0,FTError.shape[0],1)
-color = iter(plt.cm.rainbow(np.linspace(0, 1, N.shape[0])))
-cmap = 'rainbow'
-
-k = np.arange(0,midPos[1]) / (2*kAbbe)
-eps = 1e-12
-
-plt.figure()
-for l,c in zip(N,color):
-	plt.semilogy(k,radialmean(FTError[l,:,:],center=(midPos[0],midPos[1]),nbins=midPos[0])+eps,color=c)
-plt.semilogy(k,radialmean(FTError[max_NCCLoss,:,:],center=(midPos[0],midPos[1]),nbins=midPos[0])+eps,'-',c='0.25',label='knowing groundtruth')
-plt.semilogy(k,radialmean(FTError[max_optim,:,:],center=(midPos[0],midPos[1]),nbins=midPos[0])+eps,'.',c='0.25',label='using binomial split')
-	
-sm = plt.cm.ScalarMappable(cmap=cmap)
-sm.set_array([])  
-plt.colorbar(sm, ticks=np.linspace(0,1,3),label='Relative iteration number')
-plt.grid('on')
-plt.xlabel('Spatial frequencies k / $k_{max}$')
-plt.ylabel('Spectral radial MSE')
-plt.legend(fontsize=8,loc='best')
-plt.xlim(0,2)
-plt.ylim(1,None)
-plt.tight_layout
-if doPrint:
-	plt.savefig('Fig3.png', dpi = 300)
-
-plt.figure()
-SumFTError = np.sum(FTError,axis=(1,2))
-plt.plot(SumFTError,'g-')
-plt.xlabel('Iteration number')
-plt.ylabel('Integrated spectral MSE')
-plt.grid('on')
-ind = np.argmin(SumFTError)
-plt.plot(ind,SumFTError[ind],'go',label='minimal spectral MSE')
-plt.plot(max_NCCLoss,SumFTError[max_NCCLoss],'ro',mfc='none',label='knowing groundtruth')
-plt.plot(max_PoissonLoss,SumFTError[max_PoissonLoss],'ko',mfc='none',label='likelihood criterion')
-plt.plot(max_CrossEntropyLoss,SumFTError[max_CrossEntropyLoss],'bo',mfc='none',label='cross-entropy criterion')
-plt.legend(fontsize=8,loc='best')
-plt.xlim(0,Niter)
-plt.tight_layout()
-if doPrint:
-	plt.savefig('Fig4.png', dpi = 300)
-#plt.gca().axes.yaxis.set_ticks([])
+        plt.figure()
+        ax=plt.subplot(313)
+        plt.plot(X,obj[:,int(midPos[1]/4)],color='0.5')
+        plt.plot(X,deconv[:,int(midPos[1]/4)],'r-')
+        plt.xlim(0,np.shape(obj)[0]*pxSize[0])
+        plt.xlabel('x-coordinate / (µm)',fontsize=10)
+        plt.ylabel('Signal',fontsize=10)
+        plt.title('Knowing groundtruth object',fontsize=8)
+        plt.grid('on')
+        plt.subplot(312,sharex=ax,sharey=ax)
+        plt.plot(X,obj[:,int(midPos[1]/4)],color='0.5')
+        plt.plot(X,deconv_split[:,int(midPos[1]/4)],'b-')
+        plt.xlim(0,np.shape(obj)[0]*pxSize[0])
+        plt.xlabel('x-coordinate / (µm)',fontsize=10)
+        plt.ylabel('Signal',fontsize=10)
+        plt.title('Cross-entropy criterion',fontsize=8)
+        plt.grid('on')
+        plt.subplot(311,sharex=ax,sharey=ax)
+        plt.plot(X,obj[:,int(midPos[1]/4)],color='0.5')
+        plt.plot(X,deconv_split[:,int(midPos[1]/4)],'k-')
+        plt.xlim(0,np.shape(obj)[0]*pxSize[0])
+        plt.xlabel('x-coordinate / (µm)',fontsize=10)
+        plt.ylabel('Signal',fontsize=10)
+        plt.title('Log. likelihood criterion',fontsize=8)
+        plt.grid('on')
+        plt.tight_layout()
+        if doPrint:
+            plt.savefig('Fig5b.png', dpi = 300)
 
 
-plt.tight_layout()
-plt.show()
+    # Compute Fourier error
+    myMask = rr(numPixel,numPixel) < 2*kAbbe
+    FTest_history = ft2d(est_history)# * myMask
+    FTobj = ft2d(obj)  #* myMask
+
+    FTError = abssqr( FTest_history  - FTobj)
+
+    N = np.arange(0,FTError.shape[0],1)
+    color = iter(plt.cm.rainbow(np.linspace(0, 1, N.shape[0])))
+    cmap = 'rainbow'
+
+    k = np.arange(0,midPos[1]) / (2*kAbbe)
+    eps = 1e-12
+
+    plt.figure()
+    for l,c in zip(N,color):
+        plt.semilogy(k,radialmean(FTError[l,:,:],center=(midPos[0],midPos[1]),nbins=midPos[0])+eps,color=c)
+    plt.semilogy(k,radialmean(FTError[max_NCCLoss,:,:],center=(midPos[0],midPos[1]),nbins=midPos[0])+eps,'-',c='0.25',label='knowing groundtruth')
+    plt.semilogy(k,radialmean(FTError[max_optim,:,:],center=(midPos[0],midPos[1]),nbins=midPos[0])+eps,'.',c='0.25',label='using binomial split')
+        
+    sm = plt.cm.ScalarMappable(cmap=cmap)
+    sm.set_array([])  
+    plt.colorbar(sm, ticks=np.linspace(0,1,3),label='Relative iteration number')
+    plt.grid('on')
+    plt.xlabel('Spatial frequencies k / $k_{max}$')
+    plt.ylabel('Spectral radial MSE')
+    plt.legend(fontsize=8,loc='best')
+    plt.xlim(0,2)
+    plt.ylim(1,None)
+    plt.tight_layout
+    if doPrint:
+        plt.savefig('Fig3.png', dpi = 300)
+
+    plt.figure()
+    SumFTError = np.sum(FTError,axis=(1,2))
+    plt.plot(SumFTError,'g-')
+    plt.xlabel('Iteration number')
+    plt.ylabel('Integrated spectral MSE')
+    plt.grid('on')
+    ind = np.argmin(SumFTError)
+    plt.plot(ind,SumFTError[ind],'go',label='minimal spectral MSE')
+    plt.plot(max_NCCLoss,SumFTError[max_NCCLoss],'ro',mfc='none',label='knowing groundtruth')
+    plt.plot(max_PoissonLoss,SumFTError[max_PoissonLoss],'ko',mfc='none',label='likelihood criterion')
+    plt.plot(max_CrossEntropyLoss,SumFTError[max_CrossEntropyLoss],'bo',mfc='none',label='cross-entropy criterion')
+    plt.legend(fontsize=8,loc='best')
+    plt.xlim(0,Niter)
+    plt.tight_layout()
+    if doPrint:
+        plt.savefig('Fig4.png', dpi = 300)
+    #plt.gca().axes.yaxis.set_ticks([])
 
 
-if False:
-	obj = np.ones_like(obj);
-	img = np.random.poisson(obj*10); img_T = np.random.binomial(img,0.50); img_V = img - img_T
-	plt.close('all');plt.hist(img.ravel(),bins='auto',label='Measurement');plt.hist(img_T.ravel(),bins='auto',label='Split image 1');plt.hist(img_V.ravel(),bins='auto',label='Split image 2');
-	plt.xlabel('Measurement outcome');plt.ylabel('Number of occurrences'); plt.grid('on');plt.tight_layout(); plt.legend(fontsize=8,loc='best')
-	plt.savefig('Fig0a.png', dpi = 300)
+    plt.tight_layout()
+    plt.show()
 
-	plt.figure()
-	for l in np.arange(9):
-		plt.subplot(3,3,l+1)
-		plt.scatter(np.random.permutation(img_T.ravel()),img_V.ravel(),marker='.')
-		if l == 0:
-			plt.xlabel('Split image 1',fontsize=9); plt.ylabel('Split image 2',fontsize=9)
-		plt.title('Permutation ' + str(l+1),fontsize=8)
-		#plt.gca().axes.xaxis.set_ticks([]);plt.gca().axes.yaxis.set_ticks([])
-		plt.grid('on');	plt.tight_layout()
-	plt.savefig('Fig0b.p')
+
+    if False:
+        obj = np.ones_like(obj);
+        img = np.random.poisson(obj*10); img_T = np.random.binomial(img,0.50); img_V = img - img_T
+        plt.close('all');plt.hist(img.ravel(),bins='auto',label='Measurement');plt.hist(img_T.ravel(),bins='auto',label='Split image 1');plt.hist(img_V.ravel(),bins='auto',label='Split image 2');
+        plt.xlabel('Measurement outcome');plt.ylabel('Number of occurrences'); plt.grid('on');plt.tight_layout(); plt.legend(fontsize=8,loc='best')
+        plt.savefig('Fig0a.png', dpi = 300)
+
+        plt.figure()
+        for l in np.arange(9):
+            plt.subplot(3,3,l+1)
+            plt.scatter(np.random.permutation(img_T.ravel()),img_V.ravel(),marker='.')
+            if l == 0:
+                plt.xlabel('Split image 1',fontsize=9); plt.ylabel('Split image 2',fontsize=9)
+            plt.title('Permutation ' + str(l+1),fontsize=8)
+            #plt.gca().axes.xaxis.set_ticks([]);plt.gca().axes.yaxis.set_ticks([])
+            plt.grid('on');	plt.tight_layout()
+        plt.savefig('Fig0b.p')
     # %%
