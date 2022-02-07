@@ -247,7 +247,7 @@ est_split_history = np.zeros_like(est_split)
 est_split_history = np.repeat(est_split_history[np.newaxis],Niter,axis=0)
 
 # Richardson-Lucy deconvolution of split data
-for l in np.arange(0,Niter):
+    for l in tqdm(np.arange(0,Niter)):
 	convEst = fwd(est_split)
 	ratio = img_split / (convEst + 1e-12)
 	convRatio = bwd(ratio)
@@ -268,7 +268,7 @@ est_history = np.zeros_like(est)
 est_history = np.repeat(est_history[np.newaxis],Niter,axis=0)
 
 # Richardson-Lucy deconvolution of non-split data
-for l in np.arange(0,Niter):
+    for l in tqdm(np.arange(0,Niter)):
 	convEst = fwd(est)
 	ratio = img / (convEst + 1e-12)
 	convRatio = bwd(ratio)
