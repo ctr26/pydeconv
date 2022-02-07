@@ -20,7 +20,7 @@ doPrint = True
 # Setting seed to make simulation reproducible
 np.random.seed(10)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Some functions that are required for the code.
+#%% Some functions that are required for the code.
 
 def xx(numPixel,simSize):
 	x = np.linspace(-simSize[0]/2,simSize[0]/2,numPixel[0])
@@ -159,7 +159,7 @@ def radialmean(data,center,nbins):
 	return radialprofile
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Define simulation parameters
+#%% Define simulation parameters
 
 numPixel = (256,256)
 midPos = (128,128)
@@ -172,7 +172,7 @@ maxPhotons = 1e+2
 objName = 'spokes' # possible objects are: 'spokes', 'points_random', 'test_target'
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Compute PSF, object and image
+#%% Compute PSF, object and image
 
 # The point-spread-function
 apsf = jincPSF(numPixel,midPos,pxSize,lambda0,NA)
@@ -197,7 +197,7 @@ img = fwd(obj)
 img = np.random.poisson(img).astype('int32')
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Perform binomial splitting
+    #%% Perform binomial splitting
 
 img_T = np.random.binomial(img,0.5)
 img_V = img - img_T
@@ -246,10 +246,10 @@ for l in np.arange(0,Niter):
 	est = est * convRatio; 
 
 	est_history[l,:,:] = est
+# %%
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Calculate and display different criteria
-
+#%% Calculate and display different criteria
 LogLikelihood =  np.sum( -fwd(est_split_history) + img_split[:,::+1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
 PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
 NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
