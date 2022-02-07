@@ -18,7 +18,6 @@ from skimage import io
 doPrint = True
 
 # Setting seed to make simulation reproducible
-np.random.seed(10)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Some functions that are required for the code.
 
@@ -168,9 +167,40 @@ simSize = np.multiply(numPixel,pxSize)
 NA = 0.8
 n = 1.00
 lambda0 = 0.520
+seed = 10
+
+
+# Variables
+NA = 0.8
 maxPhotons = 1e+2
 objName = 'spokes' # possible objects are: 'spokes', 'points_random', 'test_target'
+Niter = 200
+save_images = True
+savefig = True
+generate_images=True
+out_dir = "results"
+do_analysis = True
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--out_dir", default=out_dir, type=str)
+parser.add_argument("--savefig", default=savefig, type=int)
+parser.add_argument("--generate_images", default=generate_images, type=int)
+parser.add_argument("--do_analysis", default=do_analysis, type=int)
+parser.add_argument("--save_images", default=save_images, type=int)
+
+parser.add_argument("--NA", default=NA, type=float)
+parser.add_argument("--maxPhotons", default=maxPhotons, type=float)
+parser.add_argument("--seed", default=seed, type=float)
+
+try:
+    args = parser.parse_args()
+# globals().update(vars(args))
+except:
+    args = parser.parse_args([])
+globals().update(vars(args))
+print(vars(args))
+# if __name__ == "__main__":
+np.random.seed(seed)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Compute PSF, object and image
 
