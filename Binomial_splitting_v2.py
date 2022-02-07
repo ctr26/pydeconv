@@ -203,6 +203,7 @@ print(vars(args))
 np.random.seed(seed)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Compute PSF, object and image
+if generate_images:
 
 # The point-spread-function
 apsf = jincPSF(numPixel,midPos,pxSize,lambda0,NA)
@@ -237,7 +238,6 @@ img_split = cat((img_T,img_V))
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Niter = 200
-
 # Choose initialization: 1) average value as constant; 2) further blurred image
 est_split = np.ones_like(img_split) * np.mean(img_split,axis=(1,2),keepdims=True) 	 	# 1)
 #est_split = fwd(img_split)																# 2)
@@ -280,6 +280,7 @@ est_history = np.repeat(est_history[np.newaxis],Niter,axis=0)
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Calculate and display different criteria
+if do_analysis:
 LogLikelihood =  np.sum( -fwd(est_split_history) + img_split[:,::+1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
 PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
 NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
@@ -507,3 +508,4 @@ if False:
 		#plt.gca().axes.xaxis.set_ticks([]);plt.gca().axes.yaxis.set_ticks([])
 		plt.grid('on');	plt.tight_layout()
 	plt.savefig('Fig0b.p')
+    # %%
