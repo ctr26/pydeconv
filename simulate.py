@@ -528,7 +528,7 @@ if do_analysis:
 
     if False:
         obj = np.ones_like(obj);
-        img = np.random.poisson(obj*10); img_T = np.random.binomial(img,0.50); img_V = img - img_T
+        img = np.random.poisson(obj*10); img_T = np.random.binomial(img,coin_flip_bias); img_V = img - img_T
         plt.close('all');plt.hist(img.ravel(),bins='auto',label='Measurement');plt.hist(img_T.ravel(),bins='auto',label='Split image 1');plt.hist(img_V.ravel(),bins='auto',label='Split image 2');
         plt.xlabel('Measurement outcome');plt.ylabel('Number of occurrences'); plt.grid('on');plt.tight_layout(); plt.legend(fontsize=8,loc='best')
         plt.savefig('Fig0a.png', dpi = 300)
