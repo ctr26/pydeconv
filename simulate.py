@@ -89,17 +89,17 @@ def AbbeRadiusFromPupil(pupil,midPos):
 	R = np.max(np.sqrt((arr[:,0]-midPos[0])**2 + (arr[:,1]-midPos[1])**2))
 	return np.ceil(R)
 
-def CreateObject(objName,numPixel,midPos):
+def CreateObject(obj_name,numPixel,midPos):
 	x = xx(numPixel,numPixel)
 	x = yy(numPixel,numPixel)
 	r = rr(numPixel,numPixel)
 	phi = phiphi(numPixel)
 
 	obj = np.zeros(numPixel)
-	if objName == 'spokes':
+	if obj_name == 'spokes':
 		obj[r<(0.5*np.max(r))] = 1.0
 		obj[np.mod(phi+np.pi,2*np.pi/18) <  2*np.pi/18/2] = 0.0
-	elif objName == 'test_target':
+	elif obj_name == 'test_target':
 		N = numPixel[0]
 		x = np.arange(N) / N - 0.5
 		y = np.arange(N) / N - 0.5
@@ -125,7 +125,7 @@ def CreateObject(objName,numPixel,midPos):
 		aa[:int(N/32),:] = 0; aa[N-int(N/48):,:] = 0
 		aa[:,:int(N/48)] = 0; aa[:,N-int(N/32):] = 0
 		obj = aa
-	elif objName == 'points_random':
+	elif obj_name == 'points_random':
 		pos = np.random.randint(midPos-np.floor(np.min(numPixel[0])/3).astype(int),midPos+np.floor(np.min(numPixel[1])/3).astype(int),size=(100,2))
 		obj[pos[:,0],pos[:,1]] = np.random.rand(100)+1.0
 
@@ -170,29 +170,30 @@ seed = 10
 
 
 # Variables
-NA = 0.8
-maxPhotons = 1e+2
-objName = 'spokes' # possible objects are: 'spokes', 'points_random', 'test_target'
+na = 0.8
+max_photons = 1e+2
+obj_name = 'spokes' # possible objects are: 'spokes', 'points_random', 'test_target'
 niter = 200
 save_images = True
 savefig = True
-generate_images=True
+no_image_generation=False
+no_analysis = False
 out_dir = "results"
-do_analysis = True
 coin_flip_bias = 0.5
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--out_dir", default=out_dir, type=str)
 parser.add_argument("--savefig", default=savefig, type=int)
-parser.add_argument("--generate_images", default=generate_images, type=int)
-parser.add_argument("--do_analysis", default=do_analysis, type=int)
+parser.add_argument("--no_image_generation", action='store_true')
+parser.add_argument("--no_analysis", action='store_true')
 parser.add_argument("--save_images", default=save_images, type=int)
 
 parser.add_argument("--niter", default=niter, type=float)
 parser.add_argument("--coin_flip_bias", default=coin_flip_bias, type=float)
-parser.add_argument("--NA", default=NA, type=float)
-parser.add_argument("--maxPhotons", default=maxPhotons, type=float)
+parser.add_argument("--na", default=na, type=float)
+parser.add_argument("--max_photons", default=max_photons, type=float)
 parser.add_argument("--seed", default=seed, type=float)
+parser.add_argument("--obj_name", default=obj_name, type=str)
 
 try:
     args = parser.parse_args()
@@ -203,20 +204,23 @@ globals().update(vars(args))
 print(vars(args))
 # if __name__ == "__main__":
 np.random.seed(seed)
+
+Path(out_dir).mkdir(parents=True, exist_ok=True)
+
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Compute PSF, object and image
-if generate_images:
+if not(no_image_generation):
     
     # The point-spread-function
-    apsf = jincPSF(numPixel,midPos,pxSize,lambda0,NA)
+    apsf = jincPSF(numPixel,midPos,pxSize,lambda0,na)
     pupil = ft2d(apsf)
     kAbbe = AbbeRadiusFromPupil(pupil,midPos)
     psf = abssqr(apsf)
     psf = psf / np.sum(psf) * np.sqrt(np.size(psf))
 
     # Generate groundtruth object
-    obj = CreateObject(objName,numPixel,midPos) 
-    obj = obj/np.max(obj) * maxPhotons
+    obj = CreateObject(obj_name,numPixel,midPos) 
+    obj = obj/np.max(obj) * max_photons
 
     # Forward and backwards model
     otf = ft2d(psf)
@@ -294,7 +298,7 @@ if save_images:
     save_images(est_history,os.path.join(out_dir,"est_history"))
     save_images(est_split_history,os.path.join(out_dir,"est_split_history"))
 
-if not(generate_images):
+if not(not(no_image_generation)):
     # directory = os.path.join(out_dir,"est_history")
     def load_images(directory=""):        
         path = os.path.join(directory,"*.tif")
@@ -310,12 +314,12 @@ if not(generate_images):
     # for l in est_history
     # path = os.path.join(est_history,"est_history",iteration)
     # save_images(est_split_history,out_dir)
-# if not(generate_images):
+# if not(not(no_image_generation)):
     # est_history = load_images(out_dir)
     # est_split_history = load_images(out_dir)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Calculate and display different criteria
-if do_analysis:
+if not(no_analysis):
     LogLikelihood =  np.sum( -fwd(est_split_history) + img_split[:,::+1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
     PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
     NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
@@ -409,7 +413,7 @@ if do_analysis:
     if doPrint:
         plt.savefig('Fig2.png', dpi = 300)
 
-    if objName == 'test_target':
+    if obj_name == 'test_target':
         X = np.arange(0,np.shape(obj)[0])*pxSize[0]
         plt.figure()
         ax=plt.subplot(313)
