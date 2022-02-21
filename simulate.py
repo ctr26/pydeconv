@@ -173,12 +173,13 @@ seed = 10
 NA = 0.8
 maxPhotons = 1e+2
 objName = 'spokes' # possible objects are: 'spokes', 'points_random', 'test_target'
-Niter = 200
+niter = 200
 save_images = True
 savefig = True
 generate_images=True
 out_dir = "results"
 do_analysis = True
+coin_flip_bias = 0.5
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--out_dir", default=out_dir, type=str)
@@ -187,6 +188,8 @@ parser.add_argument("--generate_images", default=generate_images, type=int)
 parser.add_argument("--do_analysis", default=do_analysis, type=int)
 parser.add_argument("--save_images", default=save_images, type=int)
 
+parser.add_argument("--niter", default=niter, type=float)
+parser.add_argument("--coin_flip_bias", default=coin_flip_bias, type=float)
 parser.add_argument("--NA", default=NA, type=float)
 parser.add_argument("--maxPhotons", default=maxPhotons, type=float)
 parser.add_argument("--seed", default=seed, type=float)
@@ -236,17 +239,17 @@ if generate_images:
     img_split = cat((img_T,img_V))
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Niter = 200
+    niter = 200
     # Choose initialization: 1) average value as constant; 2) further blurred image
     est_split = np.ones_like(img_split) * np.mean(img_split,axis=(1,2),keepdims=True) 	 	# 1)
     #est_split = fwd(img_split)																# 2)
 
     # Define variable that saves the reconstruction in each iteration
     est_split_history = np.zeros_like(est_split)
-    est_split_history = np.repeat(est_split_history[np.newaxis],Niter,axis=0)
+    est_split_history = np.repeat(est_split_history[np.newaxis],niter,axis=0)
 
     # Richardson-Lucy deconvolution of split data
-    for l in tqdm(np.arange(0,Niter)):
+    for l in tqdm(np.arange(0,niter)):
         convEst = fwd(est_split)
         ratio = img_split / (convEst + 1e-12)
         convRatio = bwd(ratio)
@@ -256,7 +259,7 @@ if generate_images:
         est_split_history[l] = est_split
 
     # Reshapeing size of img split for later
-    img_split = np.transpose(np.repeat(img_split[:,np.newaxis,:,:],Niter,axis=1),axes=(1,0,2,3))
+    img_split = np.transpose(np.repeat(img_split[:,np.newaxis,:,:],niter,axis=1),axes=(1,0,2,3))
 
     # # Choose initialization: 1) average value as constant; 2) further blurred image
     est = np.ones_like(img) + np.mean(img)												# 1)
@@ -264,10 +267,10 @@ if generate_images:
 
     # Define variable that saves the reconstruction in each iteration
     est_history = np.zeros_like(est)
-    est_history = np.repeat(est_history[np.newaxis],Niter,axis=0)
+    est_history = np.repeat(est_history[np.newaxis],niter,axis=0)
 
     # Richardson-Lucy deconvolution of non-split data
-    for l in tqdm(np.arange(0,Niter)):
+    for l in tqdm(np.arange(0,niter)):
         convEst = fwd(est)
         ratio = img / (convEst + 1e-12)
         convRatio = bwd(ratio)
@@ -326,7 +329,7 @@ if do_analysis:
     plt.xlabel('Iteration number',fontsize=10)
     plt.ylabel('Log. likelihood',fontsize=10)
     plt.title('Without binomial splitting',fontsize=8)
-    plt.xlim(0,Niter)
+    plt.xlim(0,niter)
     ax = plt.subplot(2,2,2)
     plt.plot(PoissonLoss,'k-')
     plt.grid('on')
@@ -334,7 +337,7 @@ if do_analysis:
     plt.xlabel('Iteration number',fontsize=10)
     plt.ylabel('Log. likelihood',fontsize=10)
     plt.title('With binomial splitting',fontsize=8)
-    plt.xlim(0,Niter)
+    plt.xlim(0,niter)
     plt.subplot(2,2,3,sharex=ax)
     plt.plot(CrossEntropyLoss,'b-')
     plt.xlabel('Iteration number',fontsize=10)
@@ -342,7 +345,7 @@ if do_analysis:
     plt.grid('on')
     plt.gca().axes.yaxis.set_ticks([])
     plt.title('With binomial splitting',fontsize=8)
-    plt.xlim(0,Niter)
+    plt.xlim(0,niter)
     plt.subplot(2,2,4,sharex=ax)
     plt.plot(NCCLoss,'r-')
     plt.xlabel('Iteration number',fontsize=10)
@@ -350,7 +353,7 @@ if do_analysis:
     plt.gca().axes.yaxis.set_ticks([])
     plt.grid('on')
     plt.title('Knowing groundtruth object',fontsize=8)
-    plt.xlim(0,Niter)
+    plt.xlim(0,niter)
     plt.tight_layout()
 
     max_LogLikelihood = np.argmax(LogLikelihood)
@@ -512,7 +515,7 @@ if do_analysis:
     plt.plot(max_PoissonLoss,SumFTError[max_PoissonLoss],'ko',mfc='none',label='likelihood criterion')
     plt.plot(max_CrossEntropyLoss,SumFTError[max_CrossEntropyLoss],'bo',mfc='none',label='cross-entropy criterion')
     plt.legend(fontsize=8,loc='best')
-    plt.xlim(0,Niter)
+    plt.xlim(0,niter)
     plt.tight_layout()
     if doPrint:
         plt.savefig('Fig4.png', dpi = 300)
