@@ -205,12 +205,11 @@ print(vars(args))
 # if __name__ == "__main__":
 np.random.seed(seed)
 
-Path(out_dir).mkdir(parents=True, exist_ok=True)
-
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Compute PSF, object and image
 if not(no_image_generation):
-    
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+
     # The point-spread-function
     apsf = jincPSF(numPixel,midPos,pxSize,lambda0,na)
     pupil = ft2d(apsf)
@@ -370,7 +369,7 @@ if not(no_analysis):
     plt.subplot(2,2,3); plt.plot(max_CrossEntropyLoss,CrossEntropyLoss[max_CrossEntropyLoss],'bo',mfc='none');
     plt.subplot(2,2,4); plt.plot(max_NCCLoss,NCCLoss[max_NCCLoss],'ro',mfc='none'); 
     if doPrint:
-        plt.savefig('Fig1.png', dpi = 300)
+        plt.savefig(os.path.join(out_dir,'Fig1.png'), dpi = 300)
 
     print('Ideal iteration number:')
     print('NCC:  ' + str(max_NCCLoss))
@@ -411,7 +410,7 @@ if not(no_analysis):
     plt.title('Binomial splitting',fontsize=10)
     plt.tight_layout()
     if doPrint:
-        plt.savefig('Fig2.png', dpi = 300)
+        plt.savefig(os.path.join(out_dir,'Fig2.png'), dpi = 300)
 
     if obj_name == 'test_target':
         X = np.arange(0,np.shape(obj)[0])*pxSize[0]
@@ -442,7 +441,7 @@ if not(no_analysis):
         plt.grid('on')
         plt.tight_layout()
         if doPrint:
-            plt.savefig('Fig5a.png', dpi = 300)
+            plt.savefig(os.path.join(out_dir,'Fig5a.png'), dpi = 300)
 
         plt.figure()
         ax=plt.subplot(313)
@@ -471,7 +470,7 @@ if not(no_analysis):
         plt.grid('on')
         plt.tight_layout()
         if doPrint:
-            plt.savefig('Fig5b.png', dpi = 300)
+            plt.savefig(os.path.join(out_dir,'Fig5b.png'), dpi = 300)
 
 
     # Compute Fourier error
@@ -505,7 +504,7 @@ if not(no_analysis):
     plt.ylim(1,None)
     plt.tight_layout
     if doPrint:
-        plt.savefig('Fig3.png', dpi = 300)
+        plt.savefig(os.path.join(out_dir,'Fig3.png'), dpi = 300)
 
     plt.figure()
     SumFTError = np.sum(FTError,axis=(1,2))
@@ -522,7 +521,7 @@ if not(no_analysis):
     plt.xlim(0,niter)
     plt.tight_layout()
     if doPrint:
-        plt.savefig('Fig4.png', dpi = 300)
+        plt.savefig(os.path.join(out_dir,'Fig4.png'), dpi = 300)
     #plt.gca().axes.yaxis.set_ticks([])
 
 
@@ -535,7 +534,7 @@ if not(no_analysis):
         img = np.random.poisson(obj*10); img_T = np.random.binomial(img,coin_flip_bias); img_V = img - img_T
         plt.close('all');plt.hist(img.ravel(),bins='auto',label='Measurement');plt.hist(img_T.ravel(),bins='auto',label='Split image 1');plt.hist(img_V.ravel(),bins='auto',label='Split image 2');
         plt.xlabel('Measurement outcome');plt.ylabel('Number of occurrences'); plt.grid('on');plt.tight_layout(); plt.legend(fontsize=8,loc='best')
-        plt.savefig('Fig0a.png', dpi = 300)
+        plt.savefig(os.path.join(out_dir,'Fig0a.png'), dpi = 300)
 
         plt.figure()
         for l in np.arange(9):
@@ -546,5 +545,5 @@ if not(no_analysis):
             plt.title('Permutation ' + str(l+1),fontsize=8)
             #plt.gca().axes.xaxis.set_ticks([]);plt.gca().axes.yaxis.set_ticks([])
             plt.grid('on');	plt.tight_layout()
-        plt.savefig('Fig0b.p')
+        plt.savefig(os.path.join(out_dir,'Fig0b.p'))
     # %%
