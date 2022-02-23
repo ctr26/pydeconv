@@ -15,7 +15,6 @@ dependencies:
   - numpy
   - pims
   - python=3.8
-  - rclone
   - matplotlib
   - scikit-image
   - jpype1
@@ -27,4 +26,4 @@ dependencies:
   - pip
   - pandas
   - seaborn
-  - snakemake
+  - snakemake-minimal
