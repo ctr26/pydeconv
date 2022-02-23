@@ -9,10 +9,12 @@ NITER = 200
 NA = np.linspace(0.1,2,10)
 MAX_PHOTONS = np.logspace(0,6,10)
 SEED=10
-results = "results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
 
 base_dir = workflow.current_basedir
 script = os.path.join(workflow.basedir,"simulate.py")
+
+results = "{base_dir}/results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
+
 
 container: "docker://continuumio/miniconda3:4.4.10"
 
