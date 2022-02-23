@@ -13,8 +13,7 @@ from matplotlib import rc
 from tqdm import tqdm
 font = {'size'   : 12}
 rc('font', **font)
-from skimage import io
-from skimage.util import img_as_ubyte
+from skimage import io,util
 # Do you want to save Figures as .png file?
 doPrint = True
 
@@ -242,9 +241,10 @@ if not(no_image_generation):
 
     # Pack into a nice format and remove 
     img_split = cat((img_T,img_V))
-
+iterations = np.arange(0,niter)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    niter = 200
+if do_image_generation:
+    # niter = 200
     # Choose initialization: 1) average value as constant; 2) further blurred image
     est_split = np.ones_like(img_split) * np.mean(img_split,axis=(1,2),keepdims=True) 	 	# 1)
     #est_split = fwd(img_split)																# 2)
@@ -284,6 +284,7 @@ if not(no_image_generation):
 
         est_history[l,:,:] = est
 # %%
+if do_image_generation:
 if save_images:
     # directory = os.path.join(out_dir,"est_history")
     def save_images(image_array,directory=""):
@@ -294,13 +295,13 @@ if save_images:
             # io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
             try:
                 # Image.fromarray(image).convert("L").save(os.path.join(directory,f"{iteration:05}.png"))
-                io.imsave(os.path.join(directory,f"{iteration:05}.png"),img_as_ubyte(image))
+                    io.imsave(os.path.join(directory,f"{iteration:05}.png"),image.astype(np.uint8))
             except:
                 None
     save_images(est_history,os.path.join(out_dir,"est_history"))
     save_images(est_split_history,os.path.join(out_dir,"est_split_history"))
 
-if not(not(no_image_generation)):
+if not(do_image_generation):
     # directory = os.path.join(out_dir,"est_history")
     def load_images(directory=""):        
         path = os.path.join(directory,"*.tif")
@@ -317,24 +318,26 @@ if not(not(no_image_generation)):
     # for l in est_history
     # path = os.path.join(est_history,"est_history",iteration)
     # save_images(est_split_history,out_dir)
-# if not(not(no_image_generation)):
+# if not(not(do_image_generation)):
     # est_history = load_images(out_dir)
     # est_split_history = load_images(out_dir)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Calculate and display different criteria
-if not(no_analysis):
-    LogLikelihood =  np.sum( -fwd(est_split_history) + img_split[:,::+1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
+if do_analysis:
+    logger.info("Analysis")
+    LogLikelihood = np.sum( -fwd(est_split_history) + img_split[:,::+1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
     PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
     NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
     CrossEntropyLoss = np.sum( est_split_history[:,::-1] * np.log(est_split_history[:,::+1]+1e-12),axis=(1,2,3))
-    
-    if(not(no_save_csv)):
+    if(do_save_csv):
         data_dict = {"LogLikelihood":LogLikelihood,
                      "PoissonLoss":PoissonLoss,
                      "NCCLoss":NCCLoss,
-                     "CrossEntropyLoss":CrossEntropyLoss}
+                     "CrossEntropyLoss":CrossEntropyLoss,
+                     "iterations":iterations}
         pd.DataFrame(data_dict).to_csv(os.path.join(out_dir,"data.csv"))
 
+if do_show_figures:
     plt.figure()
     ax = plt.subplot(2,2,1)
     plt.plot(LogLikelihood,'g-')
