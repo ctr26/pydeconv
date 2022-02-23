@@ -8,7 +8,8 @@ OBJ_NAME = ['spokes', 'points_random', 'test_target'] # possible objects are: 's
 NITER = 200
 NA = np.linspace(0.1,2,10)
 MAX_PHOTONS = np.logspace(0,6,10)
-results = "results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{obj_name}"
+SEED=10
+results = "results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
 
 base_dir = workflow.current_basedir
 script = os.path.join(workflow.basedir,"simulate.py")
@@ -23,14 +24,14 @@ rule all:
         #         max_photons=MAX_PHOTONS,
         #         obj_name=OBJ_NAME
         #         )
-
         all_results = expand(results+"/analyse_images.done",
                     base_dir = workflow.basedir,
                     coin_flip_bias=0.5,
                     niter=200,
-                    na=0.5,
+                    na=0.8,
                     max_photons=1e+2,
-                    obj_name='spokes'
+                    obj_name='spokes',
+                    seed=10
                     )
 
 rule generate_images:
@@ -53,8 +54,9 @@ rule generate_images:
         --na {wildcards.na} \
         --max_photons {wildcards.max_photons} \
         --obj_name {wildcards.obj_name} \
+        --seed {wildcards.seed} \
         --no_show_figures \
-        --no_analysis
+        # --no_analysis
         """
 
 rule analyse_images:
@@ -70,13 +72,14 @@ rule analyse_images:
         touch(results+"/analyse_images.done")
     shell:
         """
-	    python {script} \
-        --out_dir {params.outdir} \
-        --coin_flip_bias {wildcards.coin_flip_bias} \
-        --niter {wildcards.niter} \
-        --na {wildcards.na} \
-        --max_photons {wildcards.max_photons} \
-        --obj_name {wildcards.obj_name} \
-        --no_show_figures \
-        --no_image_generation
+	    # python {script} \
+        # --out_dir {params.outdir} \
+        # --coin_flip_bias {wildcards.coin_flip_bias} \
+        # --niter {wildcards.niter} \
+        # --na {wildcards.na} \
+        # --max_photons {wildcards.max_photons} \
+        # --obj_name {wildcards.obj_name} \
+        # --seed {wildcards.seed} \
+        # --no_show_figures \
+        # --no_image_generation
         """
