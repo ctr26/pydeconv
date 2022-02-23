@@ -25,7 +25,7 @@ rule all:
                 na=NA,
                 max_photons=MAX_PHOTONS,
                 obj_name=OBJ_NAME,
-                seed=10
+                seed=SEED
                 )
         # all_results = expand(results+"/analyse_images.done",
         #             base_dir = workflow.basedir,
