@@ -27,3 +27,4 @@ dependencies:
   - pip
   - pandas
   - seaborn
+  - snakemake
