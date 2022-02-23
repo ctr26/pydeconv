@@ -174,10 +174,10 @@ n = 1.00
 lambda0 = 0.520
 seed = 10
 
-no_image_generation = True
-no_analysis = True
-no_save_csv = True
-no_show_figures = True
+no_image_generation = False
+no_analysis = False
+no_save_csv = False
+no_show_figures = False
 # Variables
 na = 0.8
 max_photons = 1e+2
@@ -199,7 +199,7 @@ parser.add_argument("--no_analysis", action='store_true')
 parser.add_argument("--no_save_csv", action='store_true')
 parser.add_argument("--no_show_figures", action='store_true')
 
-parser.add_argument("--niter", default=niter, type=float)
+parser.add_argument("--niter", default=niter, type=int)
 parser.add_argument("--coin_flip_bias", default=coin_flip_bias, type=float)
 parser.add_argument("--na", default=na, type=float)
 parser.add_argument("--max_photons", default=max_photons, type=float)
