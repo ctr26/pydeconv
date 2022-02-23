@@ -292,8 +292,8 @@ if save_images:
             io.imsave(os.path.join(directory,f"{iteration:05}.tif"),image)
             # io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
             try:
-                Image.fromarray(image).convert("L").save(os.path.join(directory,f"{iteration:05}.png"))
-                io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
+                # Image.fromarray(image).convert("L").save(os.path.join(directory,f"{iteration:05}.png"))
+                io.imsave(os.path.join(directory,f"{iteration:05}.png"),img_as_ubyte(image))
             except:
                 None
     save_images(est_history,os.path.join(out_dir,"est_history"))
@@ -305,8 +305,7 @@ if not(not(no_image_generation)):
         path = os.path.join(directory,"*.tif")
         files = glob.glob(path)
         img_list = []
-        for iteration,file in enumerate(files):
-            img = np.array(Image.open(file))
+            img = np.array(io.imread(file))
             img_list.append(img)
         return np.array(img_list)
     est_history = load_images(os.path.join(out_dir,"est_history"))
