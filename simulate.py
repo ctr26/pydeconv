@@ -203,7 +203,7 @@ parser.add_argument("--niter", default=niter, type=int)
 parser.add_argument("--coin_flip_bias", default=coin_flip_bias, type=float)
 parser.add_argument("--na", default=na, type=float)
 parser.add_argument("--max_photons", default=max_photons, type=float)
-parser.add_argument("--seed", default=seed, type=float)
+parser.add_argument("--seed", default=seed, type=int)
 parser.add_argument("--obj_name", default=obj_name, type=str)
 
 try:
@@ -328,11 +328,11 @@ if not(do_image_generation):
         img_list = []
         for iteration,file in enumerate(tqdm(files,desc=f'Loading images {directory}')):
             # img = np.array(Image.open(file))
-            img = np.array(io.imread(file))
+            img = io.imread(file)
             img_list.append(img)
         return np.array(img_list)
     est_history = load_images(os.path.join(out_dir,"est_history"))
-    est_split_history = load_images( os.path.join(out_dir,"est_split_history"))
+    est_split_history = load_images(os.path.join(out_dir,"est_split_history"))
 
     # for l in est_history
     # path = os.path.join(est_history,"est_history",iteration)
@@ -356,7 +356,7 @@ if do_analysis:
                      "iterations":iterations}
         pd.DataFrame(data_dict).to_csv(os.path.join(out_dir,"data.csv"))
         
-if do_show_figures:
+# if do_show_figures:
     plt.figure()
     ax = plt.subplot(2,2,1)
     plt.plot(LogLikelihood,'g-')
