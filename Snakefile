@@ -6,7 +6,7 @@ import os
 COIN_FLIP_BIAS = np.linspace(0.5,1,10)
 OBJ_NAME = ['spokes', 'points_random', 'test_target'] # possible objects are: 'spokes', 'points_random', 'test_target'
 NITER = 200
-NA = np.np.linspace(0.1,2,10)
+NA = np.linspace(0.1,2,10)
 MAX_PHOTONS = np.logspace(0,6,10)
 SEED=10
 results = "results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
