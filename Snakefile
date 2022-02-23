@@ -14,6 +14,8 @@ results = "results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}
 base_dir = workflow.current_basedir
 script = os.path.join(workflow.basedir,"simulate.py")
 
+container: "docker://continuumio/miniconda3:4.4.10"
+
 rule all:
     input:
         all_results = expand(results+"/analyse_images.done",
