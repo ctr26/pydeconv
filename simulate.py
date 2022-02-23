@@ -10,11 +10,11 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib import rc
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 font = {'size'   : 12}
 rc('font', **font)
 from skimage import io
-
+from skimage.util import img_as_ubyte
 # Do you want to save Figures as .png file?
 doPrint = True
 
@@ -193,7 +193,7 @@ parser.add_argument("--save_images", default=save_images, type=int)
 parser.add_argument("--niter", default=niter, type=float)
 parser.add_argument("--coin_flip_bias", default=coin_flip_bias, type=float)
 parser.add_argument("--na", default=na, type=float)
-parser.add_argument("--max_photons", default=max_photons, type=float)
+parser.add_argument("--max_photons", default=max_photons, type=int)
 parser.add_argument("--seed", default=seed, type=float)
 parser.add_argument("--obj_name", default=obj_name, type=str)
 
@@ -206,11 +206,11 @@ globals().update(vars(args))
 print(vars(args))
 # if __name__ == "__main__":
 np.random.seed(seed)
+Path(out_dir).mkdir(parents=True, exist_ok=True)
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Compute PSF, object and image
 if not(no_image_generation):
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     # The point-spread-function
     apsf = jincPSF(numPixel,midPos,pxSize,lambda0,na)
@@ -254,7 +254,7 @@ if not(no_image_generation):
     est_split_history = np.repeat(est_split_history[np.newaxis],niter,axis=0)
 
     # Richardson-Lucy deconvolution of split data
-    for l in tqdm(np.arange(0,niter)):
+    for l in tqdm(np.arange(0,niter),desc=f'Richardson lucy deconvolution'):
         convEst = fwd(est_split)
         ratio = img_split / (convEst + 1e-12)
         convRatio = bwd(ratio)
@@ -287,7 +287,8 @@ if not(no_image_generation):
 if save_images:
     # directory = os.path.join(out_dir,"est_history")
     def save_images(image_array,directory=""):
-        for iteration,image in enumerate(image_array):
+        
+        for iteration,image in enumerate(tqdm(image_array,desc=f'Saving images {directory}')):
             Path(directory).mkdir(parents=True, exist_ok=True)
             io.imsave(os.path.join(directory,f"{iteration:05}.tif"),image)
             # io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
@@ -305,6 +306,8 @@ if not(not(no_image_generation)):
         path = os.path.join(directory,"*.tif")
         files = glob.glob(path)
         img_list = []
+        for iteration,file in enumerate(tqdm(files,desc=f'Loading images {directory}')):
+            # img = np.array(Image.open(file))
             img = np.array(io.imread(file))
             img_list.append(img)
         return np.array(img_list)
