@@ -6,7 +6,7 @@ import os
 COIN_FLIP_BIAS = np.linspace(0.5,1,10)
 OBJ_NAME = ['spokes', 'points_random', 'test_target'] # possible objects are: 'spokes', 'points_random', 'test_target'
 NITER = 200
-NA = np.linspace(0.1,2,10)
+NA = np.np.linspace(0.1,2,10)
 MAX_PHOTONS = np.logspace(0,6,10)
 SEED=10
 results = "results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
@@ -16,23 +16,24 @@ script = os.path.join(workflow.basedir,"simulate.py")
 
 rule all:
     input:
-        # all_results = expand(results+"/analyse_images.done",
-        #         base_dir = workflow.basedir,
-        #         coin_flip_bias=COIN_FLIP_BIAS,
-        #         niter=NITER,
-        #         na=NA,
-        #         max_photons=MAX_PHOTONS,
-        #         obj_name=OBJ_NAME
-        #         )
         all_results = expand(results+"/analyse_images.done",
-                    base_dir = workflow.basedir,
-                    coin_flip_bias=0.5,
-                    niter=200,
-                    na=0.8,
-                    max_photons=1e+2,
-                    obj_name='spokes',
-                    seed=10
-                    )
+                base_dir = workflow.basedir,
+                coin_flip_bias=COIN_FLIP_BIAS,
+                niter=NITER,
+                na=NA,
+                max_photons=MAX_PHOTONS,
+                obj_name=OBJ_NAME,
+                seed=10
+                )
+        # all_results = expand(results+"/analyse_images.done",
+        #             base_dir = workflow.basedir,
+        #             coin_flip_bias=0.5,
+        #             niter=200,
+        #             na=0.8,
+        #             max_photons=1e+2,
+        #             obj_name='spokes',
+        #             seed=10
+        #             )
 
 rule generate_images:
     conda:
@@ -40,7 +41,7 @@ rule generate_images:
     params:
         outdir=directory(results)
     resources:
-        mem_mb=4000
+        mem_mb=2000
     output:
         # out1=directory(results),
         touch(results+"/generate_images.done")
@@ -67,7 +68,7 @@ rule analyse_images:
     params:
         outdir=directory(results)
     resources:
-        mem_mb=4000
+        mem_mb=2000
     output:
         touch(results+"/analyse_images.done")
     shell:
