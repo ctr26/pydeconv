@@ -6,6 +6,7 @@ import argparse
 from PIL import Image, ImageOps
 from pathlib import Path
 import glob
+import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -178,6 +179,7 @@ save_images = True
 savefig = True
 no_image_generation=False
 no_analysis = False
+no_save_csv = False
 out_dir = "results"
 coin_flip_bias = 0.5
 
@@ -323,6 +325,13 @@ if not(no_analysis):
     PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
     NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
     CrossEntropyLoss = np.sum( est_split_history[:,::-1] * np.log(est_split_history[:,::+1]+1e-12),axis=(1,2,3))
+    
+    if(not(no_save_csv)):
+        data_dict = {"LogLikelihood":LogLikelihood,
+                     "PoissonLoss":PoissonLoss,
+                     "NCCLoss":NCCLoss,
+                     "CrossEntropyLoss":CrossEntropyLoss}
+        pd.DataFrame(data_dict).to_csv(os.path.join(out_dir,"data.csv"))
 
     plt.figure()
     ax = plt.subplot(2,2,1)
