@@ -7,9 +7,12 @@ from PIL import Image, ImageOps
 from pathlib import Path
 import glob
 import pandas as pd
+import logging
 
 import matplotlib.pyplot as plt
 from matplotlib import rc
+import matplotlib
+
 from tqdm import tqdm
 font = {'size'   : 12}
 rc('font', **font)
@@ -18,6 +21,9 @@ from skimage import io,util
 doPrint = True
 
 # Setting seed to make simulation reproducible
+
+logger = logging.getLogger('dev')
+logger.setLevel(logging.INFO)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Some functions that are required for the code.
 
@@ -168,7 +174,10 @@ n = 1.00
 lambda0 = 0.520
 seed = 10
 
-
+no_image_generation = True
+no_analysis = True
+no_save_csv = True
+no_show_figures = True
 # Variables
 na = 0.8
 max_photons = 1e+2
@@ -176,23 +185,24 @@ obj_name = 'spokes' # possible objects are: 'spokes', 'points_random', 'test_tar
 niter = 200
 save_images = True
 savefig = True
-no_image_generation=False
-no_analysis = False
-no_save_csv = False
+
 out_dir = "results"
 coin_flip_bias = 0.5
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--out_dir", default=out_dir, type=str)
 parser.add_argument("--savefig", default=savefig, type=int)
+parser.add_argument("--save_images", default=save_images, type=int)
+
 parser.add_argument("--no_image_generation", action='store_true')
 parser.add_argument("--no_analysis", action='store_true')
-parser.add_argument("--save_images", default=save_images, type=int)
+parser.add_argument("--no_save_csv", action='store_true')
+parser.add_argument("--no_show_figures", action='store_true')
 
 parser.add_argument("--niter", default=niter, type=float)
 parser.add_argument("--coin_flip_bias", default=coin_flip_bias, type=float)
 parser.add_argument("--na", default=na, type=float)
-parser.add_argument("--max_photons", default=max_photons, type=int)
+parser.add_argument("--max_photons", default=max_photons, type=float)
 parser.add_argument("--seed", default=seed, type=float)
 parser.add_argument("--obj_name", default=obj_name, type=str)
 
@@ -207,40 +217,49 @@ print(vars(args))
 np.random.seed(seed)
 Path(out_dir).mkdir(parents=True, exist_ok=True)
 
+do_image_generation = not(no_image_generation)
+do_analysis = not(no_analysis)
+do_save_csv = not(no_save_csv)
+do_show_figures = not(no_show_figures)
+
+if(no_show_figures):
+    print("Don't print figures")
+    plt.ioff()
+    matplotlib.use('Agg')
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #%% Compute PSF, object and image
-if not(no_image_generation):
 
-    # The point-spread-function
-    apsf = jincPSF(numPixel,midPos,pxSize,lambda0,na)
-    pupil = ft2d(apsf)
-    kAbbe = AbbeRadiusFromPupil(pupil,midPos)
-    psf = abssqr(apsf)
-    psf = psf / np.sum(psf) * np.sqrt(np.size(psf))
 
-    # Generate groundtruth object
-    obj = CreateObject(obj_name,numPixel,midPos) 
-    obj = obj/np.max(obj) * max_photons
+# The point-spread-function
+apsf = jincPSF(numPixel,midPos,pxSize,lambda0,na)
+pupil = ft2d(apsf)
+kAbbe = AbbeRadiusFromPupil(pupil,midPos)
+psf = abssqr(apsf)
+psf = psf / np.sum(psf) * np.sqrt(np.size(psf))
 
-    # Forward and backwards model
-    otf = ft2d(psf)
-    fwd = lambda x: np.real(ift2d(ft2d(x) * otf))
-    bwd = lambda x: np.real(ift2d(ft2d(x) * np.conj(otf)))
+# Generate groundtruth object
+obj = CreateObject(obj_name,numPixel,midPos) 
+obj = obj/np.max(obj) * max_photons
 
-    # Obtain image information
-    img = fwd(obj)
+# Forward and backwards model
+otf = ft2d(psf)
+fwd = lambda x: np.real(ift2d(ft2d(x) * otf))
+bwd = lambda x: np.real(ift2d(ft2d(x) * np.conj(otf)))
 
-    # Apply shot noise
-    img = np.random.poisson(img).astype('int32')
+# Obtain image information
+img = fwd(obj)
+
+# Apply shot noise
+img = np.random.poisson(img).astype('int32')
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    #%% Perform binomial splitting
+#%% Perform binomial splitting
 
-    img_T = np.random.binomial(img,0.5)
-    img_V = img - img_T
+img_T = np.random.binomial(img,0.5)
+img_V = img - img_T
 
-    # Pack into a nice format and remove 
-    img_split = cat((img_T,img_V))
+# Pack into a nice format and remove 
+img_split = cat((img_T,img_V))
 iterations = np.arange(0,niter)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if do_image_generation:
@@ -254,7 +273,7 @@ if do_image_generation:
     est_split_history = np.repeat(est_split_history[np.newaxis],niter,axis=0)
 
     # Richardson-Lucy deconvolution of split data
-    for l in tqdm(np.arange(0,niter),desc=f'Richardson lucy deconvolution'):
+    for l in tqdm(iterations,desc=f'Richardson lucy deconvolution'):
         convEst = fwd(est_split)
         ratio = img_split / (convEst + 1e-12)
         convRatio = bwd(ratio)
@@ -275,7 +294,7 @@ if do_image_generation:
     est_history = np.repeat(est_history[np.newaxis],niter,axis=0)
 
     # Richardson-Lucy deconvolution of non-split data
-    for l in tqdm(np.arange(0,niter)):
+    for l in tqdm(iterations):
         convEst = fwd(est)
         ratio = img / (convEst + 1e-12)
         convRatio = bwd(ratio)
@@ -285,21 +304,21 @@ if do_image_generation:
         est_history[l,:,:] = est
 # %%
 if do_image_generation:
-if save_images:
-    # directory = os.path.join(out_dir,"est_history")
-    def save_images(image_array,directory=""):
-        
-        for iteration,image in enumerate(tqdm(image_array,desc=f'Saving images {directory}')):
-            Path(directory).mkdir(parents=True, exist_ok=True)
-            io.imsave(os.path.join(directory,f"{iteration:05}.tif"),image)
-            # io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
-            try:
-                # Image.fromarray(image).convert("L").save(os.path.join(directory,f"{iteration:05}.png"))
+    if save_images:
+        # directory = os.path.join(out_dir,"est_history")
+        def save_images(image_array,directory=""):
+            
+            for iteration,image in enumerate(tqdm(image_array,desc=f'Saving images {directory}')):
+                Path(directory).mkdir(parents=True, exist_ok=True)
+                io.imsave(os.path.join(directory,f"{iteration:05}.tif"),image)
+                # io.imsave(os.path.join(directory,f"{iteration:05}.png"),image)
+                try:
+                    # Image.fromarray(image).convert("L").save(os.path.join(directory,f"{iteration:05}.png"))
                     io.imsave(os.path.join(directory,f"{iteration:05}.png"),image.astype(np.uint8))
-            except:
-                None
-    save_images(est_history,os.path.join(out_dir,"est_history"))
-    save_images(est_split_history,os.path.join(out_dir,"est_split_history"))
+                except:
+                    None
+        save_images(est_history,os.path.join(out_dir,"est_history"))
+        save_images(est_split_history,os.path.join(out_dir,"est_split_history"))
 
 if not(do_image_generation):
     # directory = os.path.join(out_dir,"est_history")
@@ -336,7 +355,7 @@ if do_analysis:
                      "CrossEntropyLoss":CrossEntropyLoss,
                      "iterations":iterations}
         pd.DataFrame(data_dict).to_csv(os.path.join(out_dir,"data.csv"))
-
+        
 if do_show_figures:
     plt.figure()
     ax = plt.subplot(2,2,1)
