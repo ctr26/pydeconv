@@ -45,7 +45,7 @@ rule generate_images:
     params:
         outdir=directory(results)
     resources:
-        mem_mb=2000
+        mem_mb=8000
     output:
         # out1=directory(results),
         touch(results+"/generate_images.done")
@@ -72,7 +72,7 @@ rule analyse_images:
     params:
         outdir=directory(results)
     resources:
-        mem_mb=2000
+        mem_mb=1000
     output:
         touch(results+"/analyse_images.done")
     shell:
