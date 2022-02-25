@@ -178,6 +178,7 @@ no_image_generation = False
 no_analysis = False
 no_save_csv = False
 no_show_figures = False
+no_save_images = False
 # Variables
 na = 0.8
 max_photons = 1e+2
@@ -192,12 +193,14 @@ coin_flip_bias = 0.5
 parser = argparse.ArgumentParser()
 parser.add_argument("--out_dir", default=out_dir, type=str)
 parser.add_argument("--savefig", default=savefig, type=int)
-parser.add_argument("--save_images", default=save_images, type=int)
+# parser.add_argument("--save_images", default=save_images, type=int)
 
 parser.add_argument("--no_image_generation", action='store_true')
 parser.add_argument("--no_analysis", action='store_true')
 parser.add_argument("--no_save_csv", action='store_true')
 parser.add_argument("--no_show_figures", action='store_true')
+parser.add_argument("--no_save_images", action='store_true')
+
 
 parser.add_argument("--niter", default=niter, type=int)
 parser.add_argument("--coin_flip_bias", default=coin_flip_bias, type=float)
@@ -221,6 +224,7 @@ do_image_generation = not(no_image_generation)
 do_analysis = not(no_analysis)
 do_save_csv = not(no_save_csv)
 do_show_figures = not(no_show_figures)
+do_save_images = not(no_save_images)
 
 if(no_show_figures):
     print("Don't print figures")
@@ -304,7 +308,7 @@ if do_image_generation:
         est_history[l,:,:] = est
 # %%
 if do_image_generation:
-    if save_images:
+    if do_save_images:
         # directory = os.path.join(out_dir,"est_history")
         def save_images(image_array,directory=""):
             
