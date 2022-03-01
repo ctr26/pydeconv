@@ -359,7 +359,17 @@ if do_analysis:
                      "NCCLoss":NCCLoss,
                      "CrossEntropyLoss":CrossEntropyLoss,
                      "iterations":iterations}
-        pd.DataFrame(data_dict).to_csv(os.path.join(out_dir,"data.csv"))
+        metadata_dict = {"seed":seed,
+                        "na":na,
+                        "max_photons":max_photons,
+                        "obj_name":obj_name,
+                        "niter":niter,
+                        "out_dir": out_dir,
+                        "coin_flip_bias": coin_flip_bias
+        }
+        data = pd.DataFrame(data_dict)
+        metdata = pd.DataFrame(metadata_dict,index=data.index)
+        data.join(metdata).to_csv(os.path.join(out_dir,"data.csv"))
         
 # if do_show_figures:
     plt.figure()
