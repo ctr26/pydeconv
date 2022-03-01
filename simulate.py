@@ -326,18 +326,18 @@ if do_image_generation:
 
 if not(do_image_generation):
     if do_save_images:
-    # directory = os.path.join(out_dir,"est_history")
-    def load_images(directory=""):        
-        path = os.path.join(directory,"*.tif")
-        files = glob.glob(path)
-        img_list = []
-        for iteration,file in enumerate(tqdm(files,desc=f'Loading images {directory}')):
-            # img = np.array(Image.open(file))
-            img = io.imread(file)
-            img_list.append(img)
-        return np.array(img_list)
-    est_history = load_images(os.path.join(out_dir,"est_history"))
-    est_split_history = load_images(os.path.join(out_dir,"est_split_history"))
+        # directory = os.path.join(out_dir,"est_history")
+        def load_images(directory=""):
+            path = os.path.join(directory,"*.tif")
+            files = glob.glob(path)
+            img_list = []
+            for iteration,file in enumerate(tqdm(files,desc=f'Loading images {directory}')):
+                # img = np.array(Image.open(file))
+                img = io.imread(file)
+                img_list.append(img)
+            return np.array(img_list)
+        est_history = load_images(os.path.join(out_dir,"est_history"))
+        est_split_history = load_images(os.path.join(out_dir,"est_split_history"))
 
     # for l in est_history
     # path = os.path.join(est_history,"est_history",iteration)
