@@ -369,7 +369,7 @@ if do_analysis:
         }
         data = pd.DataFrame(data_dict)
         metdata = pd.DataFrame(metadata_dict,index=data.index)
-        data.join(metdata).to_csv(os.path.join(out_dir,"data.csv"))
+        data.join(metdata).to_csv(os.path.join(out_dir,"data.csv"),index=False)
         
 # if do_show_figures:
     plt.figure()
