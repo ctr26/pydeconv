@@ -325,6 +325,7 @@ if do_image_generation:
         save_images(est_split_history,os.path.join(out_dir,"est_split_history"))
 
 if not(do_image_generation):
+    if do_save_images:
     # directory = os.path.join(out_dir,"est_history")
     def load_images(directory=""):        
         path = os.path.join(directory,"*.tif")
