@@ -61,6 +61,7 @@ rule generate_images:
         --obj_name {wildcards.obj_name} \
         --seed {wildcards.seed} \
         --no_show_figures \
+        --no_save_images
         # --no_analysis
         """
 
