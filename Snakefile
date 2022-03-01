@@ -12,6 +12,7 @@ SEED=10
 
 base_dir = workflow.current_basedir
 script = os.path.join(workflow.basedir,"simulate.py")
+collate_script = os.path.join(workflow.basedir,"collate_csvs.py")
 
 results = "{base_dir}/results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
 
@@ -20,15 +21,17 @@ container: "docker://continuumio/miniconda3:4.4.10"
 
 rule all:
     input:
-        all_results = expand(results+"/analyse_images.done",
-                base_dir = workflow.basedir,
-                coin_flip_bias=COIN_FLIP_BIAS,
-                niter=NITER,
-                na=NA,
-                max_photons=MAX_PHOTONS,
-                obj_name=OBJ_NAME,
-                seed=SEED
-                )
+        "results/full.csv"
+        # workflow.basedir+"/full.csv"
+        # all_results = expand(results+"/analyse_images.done",
+        #         base_dir = workflow.basedir,
+        #         coin_flip_bias=COIN_FLIP_BIAS,
+        #         niter=NITER,
+        #         na=NA,
+        #         max_photons=MAX_PHOTONS,
+        #         obj_name=OBJ_NAME,
+        #         seed=SEED
+        #         )
         # all_results = expand(results+"/analyse_images.done",
         #             base_dir = workflow.basedir,
         #             coin_flip_bias=0.5,
@@ -73,7 +76,7 @@ rule analyse_images:
     params:
         outdir=directory(results)
     resources:
-        mem_mb=1000
+        mem_mb=1
     output:
         touch(results+"/analyse_images.done")
     shell:
@@ -88,4 +91,30 @@ rule analyse_images:
         # --seed {wildcards.seed} \
         # --no_show_figures \
         # --no_image_generation
+        """
+
+rule collate_csvs:
+    input:
+        # results+"/generate_images.done"
+        expand(results+"/analyse_images.done",
+                base_dir = workflow.basedir,
+                coin_flip_bias=COIN_FLIP_BIAS,
+                niter=NITER,
+                na=NA,
+                max_photons=MAX_PHOTONS,
+                obj_name=OBJ_NAME,
+                seed=SEED
+                )
+    conda:
+        "environment.yml"
+    # params:
+    #     outdir=directory(results)
+    resources:
+        mem_mb=1000
+    output:
+       "results/full.csv"
+    shell:
+        """
+	    python {collate_script} \
+        --out_dir results \
         """
