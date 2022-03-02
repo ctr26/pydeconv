@@ -76,7 +76,7 @@ rule analyse_images:
     params:
         outdir=directory(results)
     resources:
-        mem_mb=1
+        mem_mb=100
     output:
         touch(results+"/analyse_images.done")
     shell:
