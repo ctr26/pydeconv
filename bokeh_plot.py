@@ -31,19 +31,17 @@ csv_file = "full.csv"
 #                   'Class': ['Algebra', 'Calculus', 'Trigonometry', 'Biology', 'Chemistry', 'Physics'],
 #                   'FailRate': [0.05, 0.16, 0.31, 0.12, 0.20, 0.08]})
 
-metadata = ["seed","na","max_photons","obj_name","niter","coin_flip_bias"]
-measurands = ["LogLikelihood","PoissonLoss","NCCLoss","CrossEntropyLoss"]
-xaxis="iterations"
-yaxis="value"
+metadata = ["seed", "na", "max_photons", "obj_name", "niter", "coin_flip_bias"]
+measurands = ["LogLikelihood", "PoissonLoss", "NCCLoss", "CrossEntropyLoss"]
+xaxis = "iterations"
+yaxis = "value"
 
 # index_headers = metadata+[xaxis];index_headers
 index_headers = metadata
 
 df = pd.read_csv(csv_file).drop("out_dir", axis=1)
-df = df.melt(id_vars=[xaxis]+metadata,
-            value_name=yaxis,
-            var_name="measurands")
-df = df.set_index(metadata+["measurands"])
+df = df.melt(id_vars=[xaxis] + metadata, value_name=yaxis, var_name="measurands")
+df = df.set_index(metadata + ["measurands"])
 # df = df.melt(id_vars=metadata, value_vars=['B'],
 #         var_name='myVarname', value_name='myValname')
 # df
@@ -56,13 +54,15 @@ df_indexed = df.reset_index()
 lookup = {}
 
 select_list = []
-for metadata_header in metadata+["measurands"]:
+for metadata_header in metadata + ["measurands"]:
     index_list = list(df_indexed[metadata_header].unique())
-    index_list_str = list(map(str,index_list))
-    lookup.update(dict(zip(index_list_str,index_list)))
+    index_list_str = list(map(str, index_list))
+    lookup.update(dict(zip(index_list_str, index_list)))
 
     # try:
-    select = Select(title=metadata_header, value=index_list_str[0], options=index_list_str)
+    select = Select(
+        title=metadata_header, value=index_list_str[0], options=index_list_str
+    )
     # except:
     #     # index_list.sort()
     #     min_val = min(index_list)
@@ -75,7 +75,7 @@ for metadata_header in metadata+["measurands"]:
 # df_melt_slim_super_slim_indexed
 # view = CDSView(source=src, filters=[GroupFilter(column_name="metric", group="psnr_V")])
 
-df_small = df.iloc[0:df[xaxis].max()]
+df_small = df.iloc[0 : df[xaxis].max()]
 
 # %%
 print("Making figure")
@@ -84,7 +84,7 @@ print("Loading source")
 source = ColumnDataSource(data=df_small)
 callback = CustomJS(code="console.log('tap event occurred')")
 print("Scatter plot")
-scatter = p.scatter(x=xaxis, y=yaxis,source=source)
+scatter = p.scatter(x=xaxis, y=yaxis, source=source)
 # scatter = p.scatter(x=xaxis, y=yaxis)
 # scatter = p.scatter()
 
@@ -113,9 +113,11 @@ def update(attrname, old, new):
 
         group = selector.value
         group_list.append(group)
-    print(column_name_list) # ['seed', 'na', 'max_photons', 'obj_name', 'niter', 'coin_flip_bias']
-    print(group_list) # ['10', '0.1', '10000.0', 'points_random', '200', '0.5']
-    group_list_pandas = list(map(lookup.get,group_list))
+    print(
+        column_name_list
+    )  # ['seed', 'na', 'max_photons', 'obj_name', 'niter', 'coin_flip_bias']
+    print(group_list)  # ['10', '0.1', '10000.0', 'points_random', '200', '0.5']
+    group_list_pandas = list(map(lookup.get, group_list))
     data_df = df.xs(group_list_pandas, level=column_name_list)
     print(data_df)
     source.data = ColumnDataSource.from_df(data_df)
