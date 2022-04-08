@@ -353,6 +353,9 @@ if do_analysis:
     PoissonLoss = np.sum( -fwd(est_split_history) + img_split[:,::-1] * np.log(fwd(est_split_history)+1e-12),axis=(1,2,3))
     NCCLoss = np.squeeze(np.mean((obj - np.mean(obj)) * (est_history - np.mean(est_history,axis=(1,2),keepdims=True)),axis=(1,2),keepdims=True) / (np.std(obj) * np.std(est_history,axis=(1,2),keepdims=True)))
     CrossEntropyLoss = np.sum( est_split_history[:,::-1] * np.log(est_split_history[:,::+1]+1e-12),axis=(1,2,3))
+    
+    # CrossEntropy and PoissonLoss of not ground truth
+    
     if(do_save_csv):
         data_dict = {"LogLikelihood":LogLikelihood,
                      "PoissonLoss":PoissonLoss,
