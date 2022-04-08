@@ -4,10 +4,11 @@ import os
 
 # Variables
 COIN_FLIP_BIAS = np.linspace(0.5,1,10)
+COIN_FLIP_BIAS = 0.5
 OBJ_NAME = ['spokes', 'points_random', 'test_target'] # possible objects are: 'spokes', 'points_random', 'test_target'
 NITER = 200
-NA = np.linspace(0.1,2,10)
-MAX_PHOTONS = np.logspace(0,6,10)
+NA = np.linspace(0.1,1.4,20)
+MAX_PHOTONS = np.logspace(0,4,20)
 SEED=10
 
 base_dir = workflow.current_basedir
