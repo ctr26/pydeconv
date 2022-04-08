@@ -1,6 +1,7 @@
 # %%
 from curses import meta
 import pandas as pd
+import numpy as np
 from bokeh.plotting import figure
 from bokeh.models import (
     ColumnDataSource,
@@ -11,6 +12,7 @@ from bokeh.models import (
     IndexFilter,
     GroupFilter,
 )
+import matplotlib.pyplot as plt
 from bokeh.io import show, output_notebook
 from bokeh.layouts import column
 from bokeh.models.callbacks import CustomJS
@@ -23,6 +25,7 @@ from bokeh.application import Application
 from bokeh.application.handlers import FunctionHandler
 from bokeh.io import output_notebook  # enables plot interface in J notebook
 from bokeh.layouts import column, layout, widgetbox, row
+import seaborn as sns
 
 csv_file = "full.csv"
 # output_notebook()
@@ -44,18 +47,59 @@ df = df.melt(id_vars=[xaxis] + metadata, value_name=yaxis, var_name="measurands"
 df = df.set_index(metadata + ["measurands"])
 # df = df.melt(id_vars=metadata, value_vars=['B'],
 #         var_name='myVarname', value_name='myValname')
-# df
+
+# %%
+# groups = df["values"].groupby(metadata+["measurands"])
+from sklearn.preprocessing import minmax_scale
+
+df[yaxis] = df[yaxis].groupby(metadata + ["measurands"]).transform(minmax_scale)
+# #  %%
+# groups = df.groupby(metadata + ["measurands"])
+
+# max_values = df.groupby(metadata + ["measurands"], group_keys=False).apply(
+#     lambda x: x.nlargest(1, yaxis)
+# )
+# max_values
+# #  %%
+# wide_max = max_values.reset_index()
+# sns.lmplot(x="na",
+#            col="obj_name",
+#            row="measurands",
+#            hue="max_photons",
+#            y=xaxis,
+#            data=max_values.reset_index(),
+#            fit_reg=False)
+# plt.show()
+
+#  %%
+# sns.relplot(x="na",
+#             col="obj_name",
+#             row="measurands",
+#             hue="max_photons",
+#             y=xaxis,
+#             #    markers="+",
+#             marker='o',
+#             data=max_values.reset_index(),
+#             kind="line",
+#             palette=sns.color_palette()
+#             )
+# plt.show()
+# group = groups.get_group(list(groups.groups)[0])
+
+# group.loc[group[yaxis].nlargest(columns=1)]
 # %%
 # index_headers = index_headers+["measurands"]
 
 df_indexed = df.reset_index()
+
+
 #  %%
 
 lookup = {}
 
 select_list = []
 for metadata_header in metadata + ["measurands"]:
-    index_list = list(df_indexed[metadata_header].unique())
+    index_list = sorted(list(df_indexed[metadata_header].unique()))
     index_list_str = list(map(str, index_list))
     lookup.update(dict(zip(index_list_str, index_list)))
 
