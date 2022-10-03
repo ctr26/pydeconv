@@ -11,14 +11,14 @@ from skimage import data,color
 import pims
 
 
-real_3D_image_file = "~/+projects/2019_jrl/2019_jRL_impute/data/CraigDeconvolutionData/8bit_bf.tif"
-real_3D_beads_file = "~/+projects/2019_jrl/2019_jRL_impute/data/CraigDeconvolutionData/2020-09-04 - calibration/beads/200904_16.50.57_Step_Size_-0.4_Wavelength_DAPI 452-45_500nm_TetBeads/MMStack.ome.tif"
+# real_3D_image_file = "~/+projects/2019_jrl/2019_jRL_impute/data/CraigDeconvolutionData/8bit_bf.tif"
+# real_3D_beads_file = "~/+projects/2019_jrl/2019_jRL_impute/data/CraigDeconvolutionData/2020-09-04 - calibration/beads/200904_16.50.57_Step_Size_-0.4_Wavelength_DAPI 452-45_500nm_TetBeads/MMStack.ome.tif"
 
-real_3D_image_file_full = expanduser(real_3D_image_file)
-real_3D_beads_file_full = expanduser(real_3D_beads_file)
+# real_3D_image_file_full = expanduser(real_3D_image_file)
+# real_3D_beads_file_full = expanduser(real_3D_beads_file)
 
-real_3D_psf_window = (140, 40, 40)  # (z,y,x)
-real_3D_psf_window = [60, 20, 20]
+# real_3D_psf_window = (140, 40, 40)  # (z,y,x)
+# real_3D_psf_window = [60, 20, 20]
 
 # def sigma_scale(r_dist):
 #     return (r_dist + 0.01) * 3
@@ -47,38 +47,38 @@ def test_deconvolve_shape():
 
 # def airy_get_psf():
     
-@pytest.mark.parametrize("dimensions", ["2D", "3D"])
-@pytest.mark.parametrize("psf", ["variable", "homogenous"])
-@pytest.mark.parametrize("simulation", ["real", "sim"])
-def test_deconvolve(dimensions,psf,simulation):
-    image,psf_image = get_image(dimensions,simulation)
-    if(psf=="variable"):
-        psf_order = -1
-    if(psf=="homogenous"):
-        psf_order = 0
+# @pytest.mark.parametrize("dimensions", ["2D", "3D"])
+# @pytest.mark.parametrize("psf", ["variable", "homogenous"])
+# @pytest.mark.parametrize("simulation", ["real", "sim"])
+# def test_deconvolve(dimensions,psf,simulation):
+#     image,psf_image = get_image(dimensions,simulation)
+#     if(psf=="variable"):
+#         psf_order = -1
+#     if(psf=="homogenous"):
+#         psf_order = 0
 
-    H = impute_psf_from_image(psf_image,order=0)
-    deconvolve.deconvolve(image,H)
-    pass
+#     H = impute_psf_from_image(psf_image,order=0)
+#     deconvolve.deconvolve(image,H)
+#     pass
 
-def get_image(dimensions,simulation):
-    # if dimensions = "2D":
+# def get_image(dimensions,simulation):
+#     # if dimensions = "2D":
         
-    if (dimensions == "3D") & (simulation == "sim"):
-        image_file = real_3D_image_file_full
-        beads_file = real_3D_beads_file
-        psf_window = real_3D_psf_window
+#     if (dimensions == "3D") & (simulation == "sim"):
+#         image_file = real_3D_image_file_full
+#         beads_file = real_3D_beads_file
+#         psf_window = real_3D_psf_window
 
-    psf_image = pims.open(beads_file)
-    image = pims.open(image_file)
+#     psf_image = pims.open(beads_file)
+#     image = pims.open(image_file)
 
-    if (dimensions == "2D") & (simulation == "sim"):
-        middle_plane = round(len(image)/2)
-        psf_2D = psf_image[middle_plane]
-        image_2D = image[middle_plane]
+#     if (dimensions == "2D") & (simulation == "sim"):
+#         middle_plane = round(len(image)/2)
+#         psf_2D = psf_image[middle_plane]
+#         image_2D = image[middle_plane]
 
-        psf_image = psf_2D
-        image = image_2D
+#         psf_image = psf_2D
+#         image = image_2D
 
 # # %% Lazy load images
 

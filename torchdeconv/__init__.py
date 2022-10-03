@@ -3,12 +3,15 @@ from PIL import Image
 
 from . import deconvolution
 
-class Deconvolver():
-    def __new__(cls,image,method="richardson_lucy"):
-        return Image.fromarray(image)
+class Deconvolver(PIL.Image.Image):
+    # def __new__(cls,image,method="richardson_lucy"):
+    #     return Image.fromarray(image)
     
     def __init__(self,image,method="richardson_lucy",*args,**kwargs):
         pass
+
+    # def __init__(self):
+    #     pass
     
     def deconvolve(self,psf,method="richardson_lucy",*args,**kwargs):
         return deconvolution.deconvolve(self,psf,*args,**kwargs)

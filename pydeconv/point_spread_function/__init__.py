@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 import sparse
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import minmax_scale
-from . import simulation, imputation, utils, transfer_matrix
+from . import simulate, impute, utils, transfer_matrix
 
 cropped = None
 coord_list = None
@@ -21,8 +21,8 @@ flat_df = None
 def impute(psf_image, psf_centres="auto", normalise=True, centre_crop=True):
     pass
 
-def simulate(dims=[1024,1024],type="guassian",params=[]):
-    pass
+# def simulate(type="guassian",dims=[1024,1024],params=[]):
+#     pass
 
 # def __main__(psf_image, psf_centres, normalise=True, centre_crop=True):
 #     """
