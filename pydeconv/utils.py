@@ -55,3 +55,4 @@ def xyz_viewer(im):
     ax[1].imshow(np.max(im, axis=1))
     ax[2].imshow(np.max(im, axis=2))
     return fig
+

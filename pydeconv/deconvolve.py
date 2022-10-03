@@ -1,8 +1,10 @@
 # Expanded the modified richardson lucy equation to the first two components.
 from scipy.signal import convolve
 import numpy as np
+from scipy.signal.signaltools import deconvolve
 from .utils import xyz_viewer
 import matplotlib.pyplot as plt
+
 
 def richardson_lucy_varying_1PC(
     small_image,
@@ -11,11 +13,11 @@ def richardson_lucy_varying_1PC(
     pc_component_weight_map,
     mu,
     iterations=25,
-    show_image=True
-):
+    show_image=True,
+    ):
     y = small_image
     grid_psf = cropping_grid
-    x_t = np.ones_like(y)*0.5
+    x_t = np.ones_like(y) * 0.5
 
     x_t = y.copy()
 
@@ -56,7 +58,6 @@ def richardson_lucy_varying_1PC(
 
         d_c_y_over_d_c_x_t = np.add(d_0_T_c_0_y_over_d_c_x_t, d_1_T_c_1_y_over_d_c_x_t)
 
-
         c_0_T_ones = convolve(ones, c_0_T, mode="same")
         c_1_T_ones = convolve(ones, c_1_T, mode="same")
 
@@ -71,9 +72,13 @@ def richardson_lucy_varying_1PC(
         x_t_crop = x_t[grid_psf[0], grid_psf[1], grid_psf[2]]
 
         # xyz_viewer(x_t)
-        if(show_image):
+        if show_image:
             xyz_viewer(x_t_crop)
             plt.show()
         print(f"Iteration {str(i)}")
 
     return x_t_crop
+
+
+def deconvolve(image, psf_image, method="rl"):
+    pass
