@@ -346,6 +346,10 @@ if not(do_image_generation):
     # est_history = load_images(out_dir)
     # est_split_history = load_images(out_dir)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+kl_est_noiseless_signal = np.sum(np.expand_dims(fwd(obj), 0) * np.log((np.expand_dims(fwd(obj), 0) + 1e-9) / (fwd(est_history) + 1e-9)), axis=(1, 2))
+
+
 #%% Calculate and display different criteria
 if do_analysis:
     logger.info("Analysis")
