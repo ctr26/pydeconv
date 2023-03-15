@@ -436,7 +436,7 @@ if do_analysis:
             "NCCLoss": NCCLoss,
             "CrossEntropyLoss": CrossEntropyLoss,
             "iterations": iterations,
-            "kl_est_noiseless_signal": kl_est_noiseless_signal,
+            "negative_kl_est_noiseless_signal": -kl_est_noiseless_signal,
         }
         metadata_dict = {
             "seed": seed,
