@@ -20,6 +20,8 @@ dask = "^2023.3.1"
 seaborn = "^0.12.2"
 scikit-learn = "^1.2.2"
 bokeh = "^3.1.0"
+bokeh-plot = "^0.1.22"
+snakemake = "^7.24.2"
 
 
 [tool.poetry.group.dev.dependencies]
