@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pydeconv"
+name = "binomial-splitting"
 version = "0.1.0"
 description = ""
 authors = ["Craig  <craig.russell.phd@gmail.com>"]
@@ -38,8 +38,8 @@ binomial_splitting = ["binomial_splitting"]
 black = "^23.3.0"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [virtualenvs]
 create = true
