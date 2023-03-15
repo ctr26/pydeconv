@@ -14,6 +14,7 @@ from matplotlib import rc
 import matplotlib
 
 from tqdm import tqdm
+import scipy
 
 font = {"size": 12}
 rc("font", **font)
@@ -204,7 +205,7 @@ no_save_images = False
 na = 0.8
 max_photons = 1e2
 obj_name = "spokes"  # possible objects are: 'spokes', 'points_random', 'test_target'
-niter = 200
+niter = 500
 save_images = True
 savefig = True
 
@@ -380,12 +381,6 @@ if not (do_image_generation):
 # est_split_history = load_images(out_dir)
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-kl_est_noiseless_signal = np.sum(
-    np.expand_dims(fwd(obj), 0)
-    * np.log((np.expand_dims(fwd(obj), 0) + 1e-9) / (fwd(est_history) + 1e-9)),
-    axis=(1, 2),
-)
-
 
 # %% Calculate and display different criteria
 if do_analysis:
@@ -416,6 +411,24 @@ if do_analysis:
 
     # CrossEntropy and PoissonLoss of not ground truth
 
+    # kl_est_noiseless_signal = np.sum(
+    #     np.expand_dims(fwd(obj), 0)
+    #     * np.log((np.expand_dims(fwd(obj), 0) + 1e-9) / (fwd(est_history) + 1e-9)),
+    #     axis=(1, 2),
+    # )
+
+    # The following should be the ground truth best kl divergence of
+
+    kl_est_noiseless_signal = np.sum(
+        fwd(obj) * np.log((fwd(obj) + 1e-9) / (fwd(est_history) + 1e-9)),
+        axis=(1, 2),
+    )
+
+    #
+    kl_est_noiseless_signal = scipy.stats.entropy(
+        np.expand_dims(fwd(obj), 0), fwd(est_history), axis=(1, 2)
+    )
+
     if do_save_csv:
         data_dict = {
             "LogLikelihood": LogLikelihood,
@@ -423,6 +436,7 @@ if do_analysis:
             "NCCLoss": NCCLoss,
             "CrossEntropyLoss": CrossEntropyLoss,
             "iterations": iterations,
+            "kl_est_noiseless_signal": kl_est_noiseless_signal,
         }
         metadata_dict = {
             "seed": seed,
@@ -433,9 +447,15 @@ if do_analysis:
             "out_dir": out_dir,
             "coin_flip_bias": coin_flip_bias,
         }
-        data = pd.DataFrame(data_dict)
+        data = pd.melt(
+            pd.DataFrame(data_dict),
+            id_vars=["iterations"],
+            value_name="score",
+            var_name="measurands",
+        )
         metdata = pd.DataFrame(metadata_dict, index=data.index)
-        data.join(metdata).to_csv(os.path.join(out_dir, "data.csv"), index=False)
+        data = data.join(metdata)
+        data.to_csv(os.path.join(out_dir, "data.csv"), index=False)
 
     # if do_show_figures:
     plt.figure()
@@ -477,6 +497,7 @@ if do_analysis:
     max_PoissonLoss = np.argmax(PoissonLoss)
     max_NCCLoss = np.argmax(NCCLoss)
     max_CrossEntropyLoss = np.argmax(CrossEntropyLoss)
+    max_kl_est_noiseless_signal = np.argmax(kl_est_noiseless_signal)
 
     plt.subplot(2, 2, 1)
     plt.plot(max_LogLikelihood, LogLikelihood[max_LogLikelihood], "go", mfc="none")
