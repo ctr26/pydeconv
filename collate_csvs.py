@@ -30,9 +30,10 @@ print(vars(args))
 
 Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-glob_pattern = os.path.join(out_dir, "**", "*.csv")
+glob_pattern = os.path.join(out_dir, "./**.csv")
 
 df = dd.read_csv(glob_pattern)
+print(df)
 with ProgressBar():
     df = df.compute()
     df.to_csv(f"{out_dir}/full.csv",index=False)
