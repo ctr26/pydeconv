@@ -1,73 +1,84 @@
 # %%
-from curses import meta
 import pandas as pd
 import numpy as np
-from bokeh.plotting import figure
-from bokeh.models import (
-    ColumnDataSource,
-    CustomJS,
-    CustomJSFilter,
-    CDSView,
-    Select,
-    IndexFilter,
-    GroupFilter,
-)
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import minmax_scale
 
 csv_file = "results/full.csv"
-# output_notebook()
-# %%
-# df = pd.DataFrame({'Subject': ['Math', 'Math', 'Math', 'Science', 'Science', 'Science'],
-#                   'Class': ['Algebra', 'Calculus', 'Trigonometry', 'Biology', 'Chemistry', 'Physics'],
-#                   'FailRate': [0.05, 0.16, 0.31, 0.12, 0.20, 0.08]})
+metadata = [
+    "measurands",
+    "seed",
+    "na",
+    "max_photons",
+    "obj_name",
+    "niter",
+    "coin_flip_bias",
+]
 
-metadata = ["measurands","seed", "na", "max_photons", "obj_name", "niter", "coin_flip_bias"]
-# measurands = ["LogLikelihood", "PoissonLoss", "NCCLoss", "CrossEntropyLoss"]
 xaxis = "iterations"
 yaxis = "score"
 
-# index_headers = metadata+[xaxis];index_headers
-index_headers = metadata
+df = pd.read_csv(csv_file).drop("out_dir", axis=1).set_index(metadata)
 
-df = pd.read_csv(csv_file).drop("out_dir", axis=1)
-# df = df.melt(id_vars=[xaxis] + metadata, value_name=yaxis, var_name="measurands")
-# df = df.set_index(metadata)
-# df = df.melt(id_vars=metadata, value_vars=['B'],
-#         var_name='myVarname', value_name='myValname')
 
 # %%
-# groups = df["values"].groupby(metadata+["measurands"])
-from sklearn.preprocessing import minmax_scale
 
-df[yaxis] = df[yaxis].groupby(metadata + ["measurands"]).transform(minmax_scale)
 
-df.groupby(metadata).idxmax("score")
+df[yaxis] = df[yaxis].groupby(metadata).transform(minmax_scale)
 
-sns.lmplot(x="iterations",
-           y="score",
-           col="obj_name",
-           row="measurands",
-           hue="max_photons",
-           data=df.reset_index(),
-           sharey=False,
-           fit_reg=False)
-plt.show()
 
-df["iteration_optimum"] = df.iloc[df.groupby(metadata)["score"].idxmax()]["iterations"]
+df["iteration_optimum"] = df.iloc[df.reset_index().groupby(metadata)["score"].idxmax()][
+    "iterations"
+]
 
-sns.lmplot(x="max_photons",
-           y="iteration_optimum",
-           col="obj_name",
-        #    row="measurands",
-           hue="measurands",
-           data=df.reset_index(),
-           sharey=False,
-           fit_reg=False)
+# df = df[df["iterations"] < 250]
+na = 0.8
+
+sns.lmplot(
+    x="max_photons",
+    y="iteration_optimum",
+    col="obj_name",
+    #    row="measurands",
+    hue="measurands",
+    data=df.xs(1.4, level="na").reset_index(),
+    sharey=False,
+    fit_reg=False,
+)
+plt.xscale("log")
+plt.savefig(f"figures/na=({na:.2f})_vary.pdf")
 plt.show()
 
 
+max_photons = df.reset_index().apply(lambda col: col.unique())["max_photons"][6]
 
+sns.lmplot(
+    x="na",
+    y="iteration_optimum",
+    col="obj_name",
+    #    row="measurands",
+    hue="measurands",
+    data=df.xs(max_photons, level="max_photons").reset_index(),
+    sharey=False,
+    fit_reg=False,
+)
+plt.xscale("log")
+plt.savefig(f"figures/max_photons=({max_photons:.2f})_vary.pdf")
+plt.show()
+sns.lmplot(
+    x="iterations",
+    y="score",
+    col="obj_name",
+    row="measurands",
+    hue="max_photons",
+    data=df.reset_index(),
+    sharey=False,
+    fit_reg=False,
+)
+plt.show()
+
+
+print("OK")
 
 # # #  %%
 # # groups = df.groupby(metadata)
