@@ -23,26 +23,6 @@ container: "docker://continuumio/miniconda3:4.4.10"
 rule all:
     input:
         "results/full.csv"
-        # workflow.basedir+"/full.csv"
-        # all_results = expand(results+"/analyse_images.done",
-        #         base_dir = workflow.basedir,
-        #         coin_flip_bias=COIN_FLIP_BIAS,
-        #         niter=NITER,
-        #         na=NA,
-        #         max_photons=MAX_PHOTONS,
-        #         obj_name=OBJ_NAME,
-        #         seed=SEED
-        #         )
-        # all_results = expand(results+"/analyse_images.done",
-        #             base_dir = workflow.basedir,
-        #             coin_flip_bias=0.5,
-        #             niter=200,
-        #             na=0.8,
-        #             max_photons=1e+2,
-        #             obj_name='spokes',
-        #             seed=10
-        #             )
-
 rule generate_images:
     conda:
         "environment.yml"
