@@ -11,13 +11,13 @@ MAX_PHOTONS = np.logspace(0,4,20)
 SEED=np.linspace(100,200,5).astype(int)
 
 
-# Variables
-COIN_FLIP_BIAS = 0.5 
-OBJ_NAME = ['spokes'] # possible objects are: 'spokes', 'points_random', 'test_target'
-NITER = 500
-NA = 1
-MAX_PHOTONS = 100
-SEED=10
+# # Variables
+# COIN_FLIP_BIAS = 0.5 
+# OBJ_NAME = ['spokes'] # possible objects are: 'spokes', 'points_random', 'test_target'
+# NITER = 500
+# NA = 1
+# MAX_PHOTONS = 100
+# SEED=10
 
 base_dir = workflow.current_basedir
 script = os.path.join(workflow.basedir,"simulate.py")
