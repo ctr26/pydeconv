@@ -27,7 +27,7 @@ doPrint = True
 
 logger = logging.getLogger("dev")
 logger.setLevel(logging.INFO)
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# %% ---------------------------------------------------------------------------
 # %% Some functions that are required for the code.
 
 
@@ -425,9 +425,9 @@ if do_analysis:
     )
 
     #
-    kl_est_noiseless_signal = scipy.stats.entropy(
-        np.expand_dims(fwd(obj), 0), fwd(est_history), axis=(1, 2)
-    )
+    # kl_est_noiseless_signal = scipy.stats.entropy(
+    #     np.expand_dims(fwd(obj), 0), fwd(est_history), axis=(1, 2)
+    # )
 
     if do_save_csv:
         data_dict = {
