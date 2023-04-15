@@ -8,7 +8,7 @@ OBJ_NAME = ['spokes', 'points_random', 'test_target'] # possible objects are: 's
 NITER = 500
 NA = np.linspace(0.1,1.4,20)
 MAX_PHOTONS = np.logspace(0,4,20)
-SEED=np.linspace(100,200,5)
+SEED=np.linspace(100,200,5).astype(int)
 
 
 # Variables
