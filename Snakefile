@@ -10,6 +10,15 @@ NA = np.linspace(0.1,1.4,20)
 MAX_PHOTONS = np.logspace(0,4,20)
 SEED=np.linspace(100,200,5)
 
+
+# Variables
+COIN_FLIP_BIAS = 0.5 
+OBJ_NAME = ['spokes'] # possible objects are: 'spokes', 'points_random', 'test_target'
+NITER = 500
+NA = 1
+MAX_PHOTONS = 100
+SEED=10
+
 base_dir = workflow.current_basedir
 script = os.path.join(workflow.basedir,"simulate.py")
 collate_script = os.path.join(workflow.basedir,"collate_csvs.py")
@@ -17,7 +26,7 @@ collate_script = os.path.join(workflow.basedir,"collate_csvs.py")
 results = "{base_dir}/results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
 
 
-container: "docker://continuumio/miniconda3:4.4.10"
+container: "docker://snakemake/snakemake"
 
 rule all:
     input:
