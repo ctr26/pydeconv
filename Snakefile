@@ -8,7 +8,7 @@ OBJ_NAME = ['spokes', 'points_random', 'test_target'] # possible objects are: 's
 NITER = 500
 NA = 0.8
 MAX_PHOTONS = 1e2
-SEED=np.linspace(100,200,5).astype(int)
+SEED=np.linspace(100,200,20).astype(int)
 
 # COIN_FLIP_BIAS = np.linspace(1e-9,1-1e-10,20)
 # NA = np.linspace(0.1,1.4,20)
