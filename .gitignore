@@ -93,6 +93,7 @@ ENV/
 results
 .history
 <<<<<<< HEAD
+<<<<<<< HEAD
 .vscode
 *.npy
 
@@ -100,6 +101,4 @@ results
 docs/_build/
 .history
 .vscode
-=======
 *.nyp
->>>>>>> f7aa98c (git ignore)
