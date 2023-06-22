@@ -6,14 +6,17 @@ import seaborn as sns
 from sklearn.preprocessing import minmax_scale
 import dask.dataframe as dd
 from dask.diagnostics import ProgressBar
-
+import os
 # ddf = dd.read_csv("results/**/*.csv").compute().to_csv("results/full.csv")
 
-# with ProgressBar():
-#     df = dd.read_csv("results/**/*.csv").compute()
-#     df.to_csv("results/full.csv",index=False)
-
 csv_file = "results/full.csv"
+with ProgressBar():
+    if not(os.path.isfile(csv_file)):
+            df = dd.read_csv("results/**/*.csv").compute()
+            df.to_csv(csv_file,index=False)
+    else:
+        df = dd.read_csv(csv_file).compute() 
+    
 metadata = [
     "measurands",
     "seed",
@@ -125,19 +128,20 @@ gt = gt.groupby(gt.index.droplevel('seed').names).mean()
 #     lambda x: x - x.xs("negative_kl_est_noiseless_signal", level="measurands")
 # )
 # df = df[df["iterations"] < 250]
-na = 0.7842105263157894
-diff = (df_optimum - gt).droplevel("seed").assign(baseline="sub")
-div = (df_optimum / gt).droplevel("seed").assign(baseline="div")
+na = 0.8
+# diff = (df_optimum - gt).droplevel("seed").assign(baseline="sub")
+# div = (df_optimum / gt).droplevel("seed").assign(baseline="div")
 
-both = pd.concat([diff,div])
+# both = pd.concat([diff,div])
+
 sns.lmplot(
     x="max_photons",
     y="iteration_optimum",
     col="obj_name",
-    row="baseline",
+    # row="baseline",
     hue="measurands",
     x_bins=1000,
-    data=(both).xs(na, level="na").reset_index(),
+    data=df_optimum.xs(na, level="na").reset_index(),
     sharey=False,
     fit_reg=False,
 )
@@ -146,15 +150,15 @@ plt.savefig(f"figures/na=({na:.2f})_vary.pdf")
 plt.show()
 
 
-max_photons = df.reset_index().apply(lambda col: col.unique())["max_photons"][6]
-
+# max_photons = df.reset_index().apply(lambda col: col.unique())["max_photons"][6]
+max_photons = 100
 sns.lmplot(
     x="na",
     y="iteration_optimum",
     col="obj_name",
     #    row="measurands",
     hue="measurands",
-    data=df.xs(max_photons, level="max_photons").reset_index(),
+    data=df_optimum.xs(max_photons, level="max_photons").reset_index(),
     sharey=False,
     fit_reg=False,
 )
