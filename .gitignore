@@ -105,4 +105,4 @@ ENV/
 
 # mypy
 .mypy_cache/
-results
+*results*

@@ -8,44 +8,41 @@ OBJ_NAME = ['spokes', 'points_random', 'test_target'] # possible objects are: 's
 NITER = 500
 NA = 0.8
 MAX_PHOTONS = 1e2
-SEED=np.linspace(100,200,20).astype(int)
+SEED=np.linspace(100,200,10).astype(int)
 
 # COIN_FLIP_BIAS = np.linspace(1e-9,1-1e-10,20)
 # NA = np.linspace(0.1,1.4,20)
 # MAX_PHOTONS = np.logspace(0,4,20)
 
+base_dir = workflow.current_basedir
 kwargs = {
     "coin_flip_bias":COIN_FLIP_BIAS,
     "niter":NITER,
     "na":NA,
     "max_photons":MAX_PHOTONS,
     "obj_name":OBJ_NAME,
-    "seed":SEED  
+    "seed":SEED,
+    "base_dir":workflow.basedir, 
 }
  # Variables
 
-base_dir = workflow.current_basedir
 script = os.path.join(workflow.basedir,"simulate.py")
 collate_script = os.path.join(workflow.basedir,"collate_csvs.py")
 
 results = "{base_dir}/results/{coin_flip_bias}-{niter}-{na}-{max_photons}-{seed}-{obj_name}"
 
-variables = [{"max_photons":np.logspace(0,4,200)},
-            {"na":np.linspace(0.1,1.4,200)},
-            {"coin_flip_bias":np.linspace(1e-9,1-1e-10,200)}]
+variables = [{"max_photons":np.logspace(0,4,100)},
+            {"na":np.linspace(0.1,1.4,100)},
+            {"coin_flip_bias":np.linspace(1e-9,1-1e-10,100)}]
 
 results_full = []
 
 for variable_dict in variables:
-    results_expanded = expand(results+"/analyse_images.done",
-                    base_dir = workflow.basedir,
-                    **{**kwargs, **variable_dict}
-                    )
-    # breakpoint()
+    wildcards = {**kwargs, **variable_dict}
+    results_expanded = expand(results+"/analyse_images.done",**wildcards)
     results_full.extend(results_expanded)
 
 
-# breakpoint()
 container: "docker://snakemake/snakemake"
 
 rule all:
