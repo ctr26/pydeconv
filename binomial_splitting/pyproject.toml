@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "binomial-splitting"
+version = "0.1.0"
+description = ""
+authors = ["Craig Russell <craig.russell.phd@gmail.com>"]
+readme = "README.md"
+packages = [{include = "binomial_splitting"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<=3.11"
+# pydeconv = [{path = "../pydeconv"}]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
