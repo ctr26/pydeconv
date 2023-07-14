@@ -38,7 +38,7 @@ def generate_optical_operators(
     optical_model = OpticalModel(otf)
     # fwd = lambda x: np.real(utils.ift2d(utils.ft2d(x) * otf))
     # bwd = lambda x: np.real(utils.ift2d(utils.ft2d(x) * np.conj(otf)))
-    return otf, optical_model.fwd, optical_model.bwd
+    return psf, otf, optical_model.fwd, optical_model.bwd
 
 
 def psf2otf(apsf):

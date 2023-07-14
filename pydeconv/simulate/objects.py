@@ -81,7 +81,7 @@ class CreateObject:
 
 def create_object(obj_name, numPixel, midPos, seed=42):
     obj = CreateObject(numPixel, midPos)
-    return getattr(obj, obj_name)(numPixel=numPixel, midPos=midPos,seed=seed)
+    return getattr(obj, obj_name)()
 
 
 

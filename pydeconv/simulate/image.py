@@ -31,24 +31,33 @@ class SimulateImagePoisson:
         pxSize=0.1,
         lambda0=0.5,
         NA=0.5,
+        max_photons=1e5,
     ):
         obj_name = obj_name
         numPixel = numPixel
         midPos = midPos
-        self.obj = objects.create_object(obj_name, numPixel, midPos)
-        self.psf = optics.jinc_psf(numPixel, midPos, pxSize, lambda0, NA)
-        self.otf, self.fwd, self.bwd = optics.generate_optical_operators(
-            numPixel, midPos, pxSize, lambda0, NA
+        # self.obj = objects.create_object(obj_name, numPixel, midPos)
+        self.obj = create_normalised_object(
+            obj_name, numPixel, midPos, max_photons
+        )
+        self.apsf = optics.jinc_psf(numPixel, midPos, pxSize, lambda0, NA)
+        self.psf, self.otf, self.fwd, self.bwd = optics.generate_optical_operators(
+            apsf=self.apsf,
+            numPixel=numPixel,
+            midPos=midPos,
+            pxSize=pxSize,
+            lambda0=lambda0,
+            na=NA,
         )
 
-        def simulate(self):
-            return simulate_image(self.obj, self.fwd, noise=True)
+    def simulate(self):
+        return simulate_image(self.obj, self.fwd, noise=True)
 
-        def get_object(self):
-            return self.obj
+    def get_object(self):
+        return self.obj
 
-        def get_optical_operators(self):
-            return self.psf, self.otf, self.fwd, self.bwd
+    def get_optical_operators(self):
+        return self.psf, self.otf, self.fwd, self.bwd
 
-        def bionomial_splitting(self):
-            pass
+    def bionomial_splitting(self):
+        pass

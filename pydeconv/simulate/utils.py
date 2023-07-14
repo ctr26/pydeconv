@@ -22,7 +22,7 @@ def rr(numPixel, simSize):
     return r
 
 
-def phiphi(numPixel):
+def phi(numPixel):
     x = xx(numPixel, numPixel)
     y = yy(numPixel, numPixel)
 

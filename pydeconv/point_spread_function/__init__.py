@@ -1,3 +1,4 @@
+from ..simulate import point_spread_function
 from scipy.interpolate import Rbf
 import dask.array as da
 from dask.diagnostics import ProgressBar
@@ -12,7 +13,7 @@ from sklearn.decomposition import PCA
 import sparse
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import minmax_scale
-from . import simulate, impute, utils, transfer_matrix
+from . import impute, utils, transfer_matrix
 
 cropped = None
 coord_list = None

@@ -1,2 +1,2 @@
-from . import objects, utils
-from objects import SimulateImagePoisson
+from . import objects, utils, image
+from .image import SimulateImagePoisson
