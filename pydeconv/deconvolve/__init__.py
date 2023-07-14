@@ -46,7 +46,7 @@ class RichardsonLucy(Deconvolve):
         self.method = "rl"
 
     def __call__(self):
-        return richardson_lucy(
+        return richardson_lucy.richardson_lucy(
             self.image, self.psf, self.iterations, self.early_stopping
         )
 
@@ -55,9 +55,9 @@ def deconvolve(image, psf_image, method="rl"):
     pass
 
 
-# def richarson_lucy_step(est,img,fwd,bwd):
-#     convEst = fwd(est)
-#     ratio = img / (convEst + 1e-12)
-#     convRatio = bwd(ratio)
-#     convRatio = convRatio / bwd(np.ones_like(img))
-#     return est * convRatio
+def richarson_lucy_step(est,img,fwd,bwd):
+    convEst = fwd(est)
+    ratio = img / (convEst + 1e-12)
+    convRatio = bwd(ratio)
+    convRatio = convRatio / bwd(np.ones_like(img))
+    return est * convRatio

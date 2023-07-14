@@ -2,7 +2,10 @@
 name = "pydeconv"
 version = "0.1.0"
 description = ""
-authors = ["Craig  <ctr26@ebi.ac.uk>"]
+authors = ["Craig  <craig.russell.phd@gmail.com>"]
+
+packages = [{ include = "pydeconv" }]
+exclude = ["tests", "docs", "binomial_splitting"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<=3.11"
@@ -18,10 +21,18 @@ PIMS = "^0.5"
 scikit-learn = "^0.24.2"
 scipy = "^1.6.3"
 sparse = "^0.12.0"
-torch = "^1.8.1"
+# torch = "^1.8.1"
 imageio = "^2.5"
-torchvision = "^0.13.1"
+# torchvision = "^0.13.1"
 llvmlite = "0.39.0"
+binomial_splitting = [
+    { path = "./binomial_splitting", extras = [
+        "binomial_splitting",
+    ], markers = "extra == 'binomial_splitting'", optional = true },
+]
+
+[tool.poetry.extras]
+binomial_splitting = ["binomial_splitting"]
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
