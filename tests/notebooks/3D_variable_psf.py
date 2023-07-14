@@ -4,7 +4,8 @@
 import importlib
 import pydeconv
 
-from pydeconv import deconvolve, utils, point_spread_function
+from pydeconv import utils, point_spread_function
+from pydeconv import deconvolve
 from pydeconv.utils import xyz_viewer
 import os
 import pims
