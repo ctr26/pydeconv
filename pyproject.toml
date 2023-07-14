@@ -2,6 +2,7 @@
 name = "binomial-splitting"
 version = "0.1.0"
 description = ""
+<<<<<<< HEAD
 authors = ["Craig  <craig.russell.phd@gmail.com>"]
 
 packages = [{ include = "pydeconv" }]
@@ -36,11 +37,41 @@ binomial_splitting = ["binomial_splitting"]
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
+=======
+authors = ["Jan Becker"]
+readme = "README.md"
+packages = [{include = "binomial_splitting"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+scipy = "^1.7.1"
+numpy = "^1.24.2"
+pillow = "^9.4.0"
+pandas = "^1.5.3"
+scikit-image = "^0.20.0"
+matplotlib = "^3.7.1"
+tqdm = "^4.65.0"
+ipykernel = "^6.21.3"
+dask = "^2023.3.1"
+seaborn = "^0.12.2"
+scikit-learn = "^1.2.2"
+bokeh = "^3.1.0"
+bokeh-plot = "^0.1.22"
+snakemake = "^7.24.2"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+ipython = "^8.11.0"
+>>>>>>> f40342503aceedf8cfdc3f15de7ecf667b43c9c2
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+<<<<<<< HEAD
 
 [virtualenvs]
 create = true
 in-project = true
+=======
+>>>>>>> f40342503aceedf8cfdc3f15de7ecf667b43c9c2

@@ -3,18 +3,25 @@ name = "binomial-splitting"
 version = "0.1.0"
 description = ""
 <<<<<<< HEAD
+<<<<<<< HEAD
 authors = ["Craig Russell <craig.russell.phd@gmail.com>"]
 =======
 authors = ["Jan Becker"]
 >>>>>>> 5137984 (rename binomial splitting dir)
+=======
+authors = ["Jan Becker"]
+>>>>>>> f40342503aceedf8cfdc3f15de7ecf667b43c9c2
 readme = "README.md"
 packages = [{include = "binomial_splitting"}]
 
 [tool.poetry.dependencies]
 <<<<<<< HEAD
+<<<<<<< HEAD
 python = ">=3.9,<=3.11"
 # pydeconv = [{path = "../pydeconv"}]
 =======
+=======
+>>>>>>> f40342503aceedf8cfdc3f15de7ecf667b43c9c2
 python = "^3.10"
 scipy = "^1.7.1"
 numpy = "^1.24.2"
@@ -35,7 +42,10 @@ snakemake = "^7.24.2"
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
 ipython = "^8.11.0"
+<<<<<<< HEAD
 >>>>>>> 5137984 (rename binomial splitting dir)
+=======
+>>>>>>> f40342503aceedf8cfdc3f15de7ecf667b43c9c2
 
 [build-system]
 requires = ["poetry-core"]

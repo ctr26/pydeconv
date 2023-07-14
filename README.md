@@ -36,10 +36,14 @@ When to stop an iterative image reconstruction? Especially when only a single no
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> dcf4af6 (Update README.md)
+=======
+=======
+>>>>>>> f40342503aceedf8cfdc3f15de7ecf667b43c9c2
 In general this depends on the signal-to-noise ratio (SNR) and on the underlying (unkown) object itself. What often happens with iterative image reconstruction is, that the
 =======
 For example: lets suppose we want to deconvolve a noisy image using the Richardson-Lucy algorithm ([I'm an inline-style link](https://www.google.com))

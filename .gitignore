@@ -95,6 +95,7 @@ results
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 .vscode
 *.npy
 
@@ -105,3 +106,8 @@ docs/_build/
 *.nyp
 out
 *.zip
+=======
+*.npy
+out
+*.zip
+>>>>>>> f40342503aceedf8cfdc3f15de7ecf667b43c9c2
