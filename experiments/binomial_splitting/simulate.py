@@ -4,6 +4,7 @@ import numpy as np
 from pydeconv.simulate import SimulateImagePoisson
 from pydeconv import deconvolve
 import matplotlib.pyplot as plt
+import binomial_splitting
 
 def main(
     numPixel=(256, 256),
@@ -50,5 +51,9 @@ def main(
     )
     obj = simulator.get_object()
     noisy_obj = simulator.simulate()
+    result = []
+    for i in range(10):
+        result[i] = deconvolve.richarson_lucy_step(noisy_obj, obj, simulator.fwd, simulator.bwd)
+        
 
 main()
