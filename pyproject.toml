@@ -5,7 +5,7 @@ description = ""
 authors = ["Craig  <ctr26@ebi.ac.uk>"]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.11"
+python = ">=3.9,<=3.11"
 numpy = "^1.20.3"
 tqdm = "^4.60.0"
 scikit-image = "^0.18.1"
@@ -21,11 +21,10 @@ sparse = "^0.12.0"
 torch = "^1.8.1"
 imageio = "^2.5"
 torchvision = "^0.13.1"
+llvmlite = "0.39.0"
 
-[tool.poetry.dev-dependencies]
-black = {version = "^20.8b1", allow-prereleases = true}
-pytest = "^6.2.4"
-nbmake = "^0.5"
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
