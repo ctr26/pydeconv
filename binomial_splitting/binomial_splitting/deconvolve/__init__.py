@@ -18,3 +18,6 @@ def split_richarson_lucy(img, fwd, bwd, niter=100):
         est_split_history[l] = deconvolve.richarson_lucy_step(
             img, est_split_history[-1], fwd, bwd
         )
+
+def binomial_splitting_step(img, obj, fwd, bwd, coin_flip_bias=0.5):
+    pass

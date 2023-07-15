@@ -4,8 +4,8 @@ import numpy as np
 from pydeconv.simulate import SimulateImagePoisson
 from pydeconv import deconvolve
 import matplotlib.pyplot as plt
-import binomial_splitting
-
+import binomial_splitting as bs
+from tqdm import tqdm
 def main(
     numPixel=(256, 256),
     midPos=(128, 128),
@@ -51,9 +51,16 @@ def main(
     )
     obj = simulator.get_object()
     noisy_obj = simulator.simulate()
-    result = []
-    for i in range(10):
-        result[i] = deconvolve.richarson_lucy_step(noisy_obj, obj, simulator.fwd, simulator.bwd)
+    rl_steps = np.empty((niter, *noisy_obj.shape))
+    bs_steps = np.empty((niter, *noisy_obj.shape))
+    rl_steps[0] = noisy_obj
+    V,T = bs.split(noisy_obj)
+    bs_steps[0] = V 
+    
+    for i,data in tqdm(enumerate(rl_steps[:-1])):
+        rl_steps[i] = deconvolve.richarson_lucy_step(rl_steps[i-1], obj, simulator.fwd, simulator.bwd)
+        bs_steps[i] = deconvolve.richarson_lucy_step(rl_steps[i-1], obj, simulator.fwd, simulator.bwd)
+        # bs_steps[i] = bs.binomial_splitting_step(rl_steps[i-1], obj, simulator.fwd, simulator.bwd, coin_flip_bias=coin_flip_bias)
         
 
 main()
