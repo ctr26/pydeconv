@@ -44,7 +44,7 @@ def operators(
 def psf2otf(apsf):
     psf = apsf2psf(apsf)
     otf = utils.ft2d(psf)
-    return psf, otf
+    return otf
 
 
 def apsf2psf(apsf):

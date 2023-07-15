@@ -2,14 +2,13 @@ import numpy as np
 from tqdm import tqdm
 from .base import DeconvolveBase
 
+
 class RichardsonLucy(DeconvolveBase):
-    def __init__(self, psf, iterations=25, early_stopping=None, history=False):
+    def __init__(self, psf, iterations=25, early_stopping=None):
         super().__init__(
             psf,
             iterations=iterations,
             early_stopping=early_stopping,
-            method="rl",
-            history=history,
         )
 
     def __call__(self, image):
@@ -48,7 +47,6 @@ def step(est, img, fwd, bwd):
 #     # Richardson-Lucy deconvolution of split data
 #     for l in tqdm(iterations):
 #         est_history[l] = step(est_history[-1], img, fwd, bwd)
-
 
 # def richarson_lucy_step(est, img, fwd, bwd):
 #     convEst = fwd(est)

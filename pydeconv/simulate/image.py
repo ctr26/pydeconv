@@ -10,6 +10,7 @@ def bionomial_splitting(img, p=0.5):
 
 def simulate_image(obj, fwd, noise=True):
     img = fwd(obj)
+    img  = np.clip(img, 0, None)
     # Apply shot noise
     if noise:
         return np.random.poisson(img).astype("int32")
@@ -37,18 +38,10 @@ class SimulateImagePoisson:
         numPixel = numPixel
         midPos = midPos
         # self.obj = objects.create_object(obj_name, numPixel, midPos)
-        self.obj = create_normalised_object(
-            obj_name, numPixel, midPos, max_photons
-        )
+        self.obj = create_normalised_object(obj_name, numPixel, midPos, max_photons)
         self.apsf = optics.jinc_psf(numPixel, midPos, pxSize, lambda0, NA)
-        self.psf, self.otf, self.fwd, self.bwd = optics.generate_optical_operators(
-            apsf=self.apsf,
-            numPixel=numPixel,
-            midPos=midPos,
-            pxSize=pxSize,
-            lambda0=lambda0,
-            na=NA,
-        )
+        self.psf = optics.apsf2psf(self.apsf)
+        self.otf, self.fwd, self.bwd = optics.operators(self.psf)
 
     def simulate(self):
         return simulate_image(self.obj, self.fwd, noise=True)
