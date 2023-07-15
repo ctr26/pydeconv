@@ -17,10 +17,12 @@ class OpticalModel:
         return backward_optical_model(x, self.otf)
         # return np.real(utils.ift2d(utils.ft2d(x) * np.conj(self.otf)))
 
+
 # apsf = jinc_psf(numPixel, midPos, pxSize, lambda0, na)
 
-def generate_optical_operators(
-    apsf,
+
+def operators(
+    psf,
     numPixel=128,
     midPos=64,
     pxSize=0.1,
@@ -31,21 +33,24 @@ def generate_optical_operators(
     # psf = jincPSF(numPixel, midPos, pxSize, lambda0, NA)
     # obj = obj / np.max(obj) * max_photons
     # Forward and backwards model
-    
-    psf = utils.abssqr(apsf)
-    psf = psf / np.sum(psf) * np.sqrt(np.size(psf))
-    otf = utils.ft2d(psf)
-    optical_model = OpticalModel(otf)
+
+    otf = psf2otf(psf)
+    optical_model = OpticalModel(psf)
     # fwd = lambda x: np.real(utils.ift2d(utils.ft2d(x) * otf))
     # bwd = lambda x: np.real(utils.ift2d(utils.ft2d(x) * np.conj(otf)))
-    return psf, otf, optical_model.fwd, optical_model.bwd
+    return otf, optical_model.fwd, optical_model.bwd
 
 
 def psf2otf(apsf):
+    psf = apsf2psf(apsf)
+    otf = utils.ft2d(psf)
+    return psf, otf
+
+
+def apsf2psf(apsf):
     psf = utils.abssqr(apsf)
     psf = psf / np.sum(psf) * np.sqrt(np.size(psf))
-    otf = utils.ft2d(psf)
-    return otf
+    return psf
 
 
 def forward_optical_model(x, otf):
@@ -62,7 +67,7 @@ def abbe_radius_from_pupil(pupil, midPos):
     return np.ceil(R)
 
 
-def jinc_psf(numPixel, midPos, pxSize, lambda0, NA):
+def jinc_apsf(numPixel, midPos, pxSize, lambda0, NA):
     """Assumes isotropic number of pixels (e.g. 256 x 256"""
     lambda0 = lambda0 / pxSize[0]
     abbelimit = lambda0 / NA
@@ -78,3 +83,7 @@ def jinc_psf(numPixel, midPos, pxSize, lambda0, NA):
     apsf[midPos[0], midPos[1]] = 1.0
 
     return apsf
+
+
+def jinc_psf(numPixel, midPos, pxSize, lambda0, NA):
+    return apsf2psf(jinc_apsf(numPixel, midPos, pxSize, lambda0, NA))
