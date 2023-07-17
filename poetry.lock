@@ -7,7 +7,7 @@ description = ""
 optional = true
 python-versions = ">=3.9,<=3.11"
 files = []
-develop = false
+develop = true
 
 [package.source]
 type = "directory"
@@ -1244,4 +1244,4 @@ binomial-splitting = ["binomial_splitting"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<=3.11"
-content-hash = "a99c48599379257ee3c129c859794c40655f1c61abd098e454e82857ceb39fe7"
+content-hash = "4fe7a01e288bb0d6ee2675c8152de4f60435cb38e89b0623adda3acd71db1194"
