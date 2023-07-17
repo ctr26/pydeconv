@@ -1,12 +1,12 @@
 # Expanded the modified richardson lucy equation to the first two components.
 import numpy as np
-from scipy.signal.signaltools import deconvolve
+# from scipy.signal.signaltools import deconvolve
 from ..utils import xyz_viewer
 import matplotlib.pyplot as plt
 
-from pydeconv.simulate import optics
-
-
+from pydeconv.simulate import psfs
+from pydeconv import optics, utils
+from tqdm import tqdm
 class EarlyStopping:
     # Need a smart way of hooking into Deconvolve
     def __init__(self):
@@ -27,6 +27,7 @@ class DeconvolveBase:
         early_stopping=None,
     ):
         self.iterations = iterations
+        self.psf = psf
         self.otf, self.fwd, self.bwd = optics.operators(psf)
         if early_stopping is not None:
             self.early_stopping = early_stopping
@@ -51,7 +52,7 @@ class DeconvolveBase:
 
     def deconvolve(self, image, history=False):
         self.steps = np.expand_dims(image, 0).repeat(self.iterations, axis=0)
-        for i in range(self.iterations):
+        for i in tqdm(range(self.iterations)):
             self.steps[i] = self.step(image, i)
         if history:
             return self.steps

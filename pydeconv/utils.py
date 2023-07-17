@@ -56,3 +56,34 @@ def xyz_viewer(im):
     ax[2].imshow(np.max(im, axis=2))
     return fig
 
+
+
+
+def xx(numPixel, simSize):
+    x = np.linspace(-simSize[0] / 2, simSize[0] / 2, numPixel[0])
+    y = np.linspace(-simSize[1] / 2, simSize[1] / 2, numPixel[1])
+    xx = np.meshgrid(x, y)[0]
+    return xx
+
+
+def yy(numPixel, simSize):
+    x = np.linspace(-simSize[0] / 2, simSize[0] / 2, numPixel[0])
+    y = np.linspace(-simSize[1] / 2, simSize[1] / 2, numPixel[1])
+    yy = np.meshgrid(x, y)[1]
+    return yy
+
+
+def rr(numPixel, simSize):
+    x = xx(numPixel, simSize)
+    y = yy(numPixel, simSize)
+    r = np.sqrt(x**2 + y**2)
+    return r
+
+
+def phi(numPixel):
+    x = xx(numPixel, numPixel)
+    y = yy(numPixel, numPixel)
+
+    phi = np.arctan2(y, x)
+    return phi
+

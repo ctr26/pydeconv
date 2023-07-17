@@ -8,7 +8,8 @@ logger.setLevel(logging.INFO)
 # %% ---------------------------------------------------------------------------
 # %% Some functions that are required for the code.
 
-from . import utils
+from pydeconv import utils
+
 
 def create_spokes(numPixel, midPos):
     r = utils.rr(numPixel, numPixel)
@@ -17,7 +18,8 @@ def create_spokes(numPixel, midPos):
     obj[r < (0.5 * np.max(r))] = 1.0
     obj[np.mod(phi + np.pi, 2 * np.pi / 18) < 2 * np.pi / 18 / 2] = 0.0
     return obj
-    
+
+
 def create_test_target(numPixel, midPos):
     N = numPixel[0]
     x = np.arange(N) / N - 0.5
@@ -51,7 +53,8 @@ def create_test_target(numPixel, midPos):
     obj = aa
     return obj
 
-def create_points_random(numPixel, midPos,seed=42):
+
+def create_points_random(numPixel, midPos, seed=42):
     obj = np.zeros(numPixel)
     pos = np.random.randint(
         midPos - np.floor(np.min(numPixel[0]) / 3).astype(int),
@@ -68,22 +71,25 @@ def create_points_random(numPixel, midPos,seed=42):
 #     "points_random":create_points_random
 # }
 
+
 class CreateObject:
     def __init__(self, numPixel, midPos):
         self.numPixel = numPixel
         self.midPos = midPos
+
     def spokes(self):
         return create_spokes(self.numPixel, self.midPos)
+
     def test_target(self):
         return create_test_target(self.numPixel, self.midPos)
+
     def points_random(self):
         return create_points_random(self.numPixel, self.midPos)
+
 
 def create_object(obj_name, numPixel, midPos, seed=42):
     obj = CreateObject(numPixel, midPos)
     return getattr(obj, obj_name)()
-
-
 
 
 # def CreateObject(obj_name, numPixel, midPos):

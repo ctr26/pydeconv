@@ -10,22 +10,25 @@ class RichardsonLucy(DeconvolveBase):
             iterations=iterations,
             early_stopping=early_stopping,
         )
-
-    def __call__(self, image):
-        if self.history:
-            return richardson_lucy_history(
-                image,
-                self.fwd,
-                self.bwd,
-                self.iterations,
-            )
-        else:
-            return richardson_lucy(
-                image,
-                self.fwd,
-                self.bwd,
-                self.iterations,
-            )
+        
+    def deconvolution_step(self, image, i):
+        
+        return step(self.steps[i], image, self.fwd, self.bwd)
+    # def __call__(self, image):
+    #     if self.history:
+    #         return richardson_lucy_history(
+    #             image,
+    #             self.fwd,
+    #             self.bwd,
+    #             self.iterations,
+    #         )
+    #     else:
+    #         return richardson_lucy(
+    #             image,
+    #             self.fwd,
+    #             self.bwd,
+    #             self.iterations,
+    #         )
 
 
 def step(est, img, fwd, bwd):
@@ -33,7 +36,8 @@ def step(est, img, fwd, bwd):
     ratio = img / (convEst + 1e-12)
     convRatio = bwd(ratio)
     convRatio = convRatio / bwd(np.ones_like(img))
-    return est * convRatio
+    rl_step = est * convRatio
+    return np.clip(rl_step, 0, np.inf)
 
 
 # # Standard this as classes using pydeconv

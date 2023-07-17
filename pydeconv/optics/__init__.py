@@ -1,7 +1,5 @@
 from . import utils
 import numpy as np
-import numpy as np
-from scipy import special, fft, interpolate
 
 
 class OpticalModel:
@@ -54,10 +52,12 @@ def apsf2psf(apsf):
 
 
 def forward_optical_model(x, otf):
-    return np.real(utils.ift2d(utils.ft2d(x) * otf))
+    fwd = np.real(utils.ift2d(utils.ft2d(x) * otf))
+    return np.clip(fwd, 0, np.inf)
 
 
 def backward_optical_model(x, otf):
+    # TODO UNSURE IF THIS CLIPS
     return np.real(utils.ift2d(utils.ft2d(x) * np.conj(otf)))
 
 
@@ -67,23 +67,34 @@ def abbe_radius_from_pupil(pupil, midPos):
     return np.ceil(R)
 
 
-def jinc_apsf(numPixel, midPos, pxSize, lambda0, NA):
-    """Assumes isotropic number of pixels (e.g. 256 x 256"""
-    lambda0 = lambda0 / pxSize[0]
-    abbelimit = lambda0 / NA
-    ftradius = numPixel[0] / abbelimit
-    scales = ftradius / numPixel[0]
-
-    x = utils.xx(numPixel, numPixel)
-    y = utils.yy(numPixel, numPixel)
-
-    r_scaled = np.pi * np.sqrt((x * scales) ** 2 + (y * scales) ** 2)
-
-    apsf = special.jv(1, 2 * r_scaled) / (r_scaled + 1e-12)
-    apsf[midPos[0], midPos[1]] = 1.0
-
-    return apsf
+def simulate_image(obj, fwd, noise=True):
+    img = fwd(obj)
+    img = np.clip(img, 0, None)
+    # Apply shot noise
+    if noise:
+        return np.random.poisson(img).astype("int32")
+    return img
 
 
-def jinc_psf(numPixel, midPos, pxSize, lambda0, NA):
-    return apsf2psf(jinc_apsf(numPixel, midPos, pxSize, lambda0, NA))
+def simulate_image_SNR(data, fwd, snr, seed=42):
+    # def corrupt_data(data: NDArray[Int], psf: NDArray[Float], gain, snr):
+    # data_blur = conv2(data, psf*gain, "same")  # Blur image
+    # TODO correct fwd for gain
+    data_blur = fwd(data)
+    rng = np.random.default_rng()
+
+    target_snr_db = snr
+    # Calculate signal power and convert to dB
+    sig_avg_watts = np.mean(data_blur)
+    sig_avg_db = 10 * np.log10(sig_avg_watts)
+
+    noise_avg_db = sig_avg_db - target_snr_db
+    noise_avg_photons = 10 ** (noise_avg_db / 10)
+
+    mean_noise = 0
+    white_noise = np.random.normal(
+        mean_noise, np.sqrt(noise_avg_photons), data_blur.shape
+    )
+
+    signal = (rng.poisson(data_blur) + white_noise).clip(0).astype(int)
+    return signal

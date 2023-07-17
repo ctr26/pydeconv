@@ -1,20 +1,11 @@
-from . import utils, objects, optics
+from . import  objects, psfs
 import numpy as np
+from pydeconv import optics, utils
 
-
-def bionomial_splitting(img, p=0.5):
-    img_T = np.random.binomial(img, 0.5)
-    img_V = img - img_T
-    return img_T, img_V
-
-
-def simulate_image(obj, fwd, noise=True):
-    img = fwd(obj)
-    img  = np.clip(img, 0, None)
-    # Apply shot noise
-    if noise:
-        return np.random.poisson(img).astype("int32")
-    return img
+# def bionomial_splitting(img, p=0.5):
+#     img_T = np.random.binomial(img, 0.5)
+#     img_V = img - img_T
+#     return img_T, img_V
 
 
 def create_normalised_object(obj_name, numPixel, midPos, max_photons=2**16):
@@ -39,12 +30,13 @@ class SimulateImagePoisson:
         midPos = midPos
         # self.obj = objects.create_object(obj_name, numPixel, midPos)
         self.obj = create_normalised_object(obj_name, numPixel, midPos, max_photons)
-        self.apsf = optics.jinc_psf(numPixel, midPos, pxSize, lambda0, NA)
+        #TODO option for other psfs 
+        self.apsf = psfs.jinc_psf(numPixel, midPos, pxSize, lambda0, NA)
         self.psf = optics.apsf2psf(self.apsf)
         self.otf, self.fwd, self.bwd = optics.operators(self.psf)
 
     def simulate(self):
-        return simulate_image(self.obj, self.fwd, noise=True)
+        return optics.simulate_image(self.obj, self.fwd, noise=True)
 
     def get_object(self):
         return self.obj
