@@ -4,16 +4,31 @@ from .base import DeconvolveBase
 
 
 class RichardsonLucy(DeconvolveBase):
-    def __init__(self, psf, iterations=25, early_stopping=None):
+    def __init__(self, psf, max_iterations=25, early_stopping=None):
         super().__init__(
             psf,
-            iterations=iterations,
+            max_iterations=max_iterations,
             early_stopping=early_stopping,
         )
-        
-    def deconvolution_step(self, image, i):
-        
-        return step(self.steps[i], image, self.fwd, self.bwd)
+
+    def est_0(self, image):
+        return self.est_grey(image)
+
+    def est_grey(self, image):
+        return np.ones_like(image) + np.mean(image)
+
+    def est_signal(self, image):
+        return self.fwd(image)
+
+    def est_half(self, image):
+        return np.ones_like(image) * (image.max() / 2)
+
+    # def deconvolution_step(self, image, i):
+    #     return image
+
+    def step(self, image, i):
+        return step(est=self.steps[i], img=image, fwd=self.fwd, bwd=self.bwd)
+
     # def __call__(self, image):
     #     if self.history:
     #         return richardson_lucy_history(

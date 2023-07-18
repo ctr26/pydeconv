@@ -61,25 +61,28 @@ def main(
 
     V, T = bs.split(noisy_obj, p=coin_flip_bias)
     objs = np.stack((noisy_obj, V, T), axis=0)
+    objs = objs[0]
     # rl_steps = np.expand_dims(objs, 0).repeat(niter, axis=0)
     # rl_steps[0] = objs
-    # rl = RichardsonLucy(psf, iterations=niter, early_stopping=None)
-    # rl_steps = rl.deconvolve(objs, history=True)
-    iterations = np.arange(0, niter)
+    rl = RichardsonLucy(psf, max_iterations=niter, early_stopping=None)
+    rl_steps = rl.deconvolve(objs, history=True)
+    # TODO rl is broken
 
-    # Richardson-Lucy deconvolution of split data
-    image = fwd(objs[0])
-    est = np.ones_like(image) + np.mean(objs[0])
-    rl_steps = np.zeros_like(est)
-    rl_steps = np.repeat(rl_steps[np.newaxis], niter, axis=0)
-    for l in tqdm(iterations, desc=f"Richardson lucy deconvolution"):
-        convEst = fwd(est)
-        ratio = image / (convEst + 1e-12)
-        convRatio = bwd(ratio)
-        convRatio = convRatio / bwd(np.ones_like(image))
-        est = est * convRatio
+    # iterations = np.arange(0, niter)
 
-        rl_steps[l] = est
+    # # Richardson-Lucy deconvolution of split data
+    # image = fwd(objs)
+    # est = np.ones_like(image) + np.mean(objs[0])
+    # rl_steps = np.zeros_like(est)
+    # rl_steps = np.repeat(rl_steps[np.newaxis], niter, axis=0)
+    # for l in tqdm(iterations, desc=f"Richardson lucy deconvolution"):
+    #     convEst = fwd(est)
+    #     ratio = image / (convEst + 1e-12)
+    #     convRatio = bwd(ratio)
+    #     convRatio = convRatio / bwd(np.ones_like(image))
+    #     est = est * convRatio
+
+    #     rl_steps[l] = est
 
     # Richardson-Lucy deconvolution of split data
     # for i, data in tqdm(enumerate(rl_steps[:-1])):
@@ -100,11 +103,10 @@ def main(
         ]
     )
     metrics_dict
-    kl_est_noiseless_signal = np.sum(
-        fwd(obj) * np.log((fwd(obj) + 1e-9) / (fwd(rl_steps) + 1e-9)),
-        axis=(-2, -1),
-    )
-
+    # kl_est_noiseless_signal = np.sum(
+    #     fwd(obj) * np.log((fwd(obj) + 1e-9) / (fwd(rl_steps) + 1e-9)),
+    #     axis=(-2, -1),
+    # )
     rl_steps
 
 
