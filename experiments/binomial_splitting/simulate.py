@@ -62,7 +62,7 @@ def main(
     noisy_obj = simulator.simulate()
     psf, otf, fwd, bwd = simulator.get_optical_operators()
 
-    V, T = bs.split(noisy_obj, p=coin_flip_bias)
+    V, T = bs.split(noisy_obj, p=coin_flip_bias, norm=True)
     objs = np.stack((obj, noisy_obj, V, T), axis=0)
     # objs = objs[0]
     # rl_steps = np.expand_dims(objs, 0).repeat(niter, axis=0)
@@ -71,181 +71,92 @@ def main(
     rl_steps = rl.deconvolve(objs, history=True)
     # TODO rl is broken
 
-    # iterations = np.arange(0, niter)
-
-    # # Richardson-Lucy deconvolution of split data
-    # image = fwd(objs)
-    # est = np.ones_like(image) + np.mean(objs[0])
-    # rl_steps = np.zeros_like(est)
-    # rl_steps = np.repeat(rl_steps[np.newaxis], niter, axis=0)
-    # for l in tqdm(iterations, desc=f"Richardson lucy deconvolution"):
-    #     convEst = fwd(est)
-    #     ratio = image / (convEst + 1e-12)
-    #     convRatio = bwd(ratio)
-    #     convRatio = convRatio / bwd(np.ones_like(image))
-    #     est = est * convRatio
-
-    #     rl_steps[l] = est
-
-    # Richardson-Lucy deconvolution of split data
-    # for i, data in tqdm(enumerate(rl_steps[:-1])):
-    #     rl_steps[i] = deconvolve.richardson_lucy.step(
-    #         rl_steps[i - 1], obj, simulator.fwd, simulator.bwd
-    #     )
-    #     # bs_steps[i] = bs.binomial_splitting_step(rl_steps[i-1], obj, simulator.fwd, simulator.bwd, coin_flip_bias=coin_flip_bias)
-    # recon_metrics = ReconstructionMetrics2D(
-    #     est=rl_steps,gt=fwd(obj),
-    # )
-
-    # est = np.expand_dims(rl_steps,1)
-    # gt = fwd(objs)
-
-    # recon_metrics_y = ReconstructionMetrics2D(
-    #     est=fwd(np.expand_dims(rl_steps, 2)),
-    #     gt=fwd(objs),
-    # )
-
-    # recon_metrics_x = ReconstructionMetrics2D(
-    #     est=fwd(np.expand_dims(rl_steps, 2)),
-    #     gt=objs,
-    # )
-    
-    # y = noisy_obj
-    est = fwd(rl_steps)
+    est = rl_steps[1:]
+    y_est = fwd(est)
     gt = fwd(objs)
-    
+
+    # recon_metrics_objs = ReconstructionMetrics2D(
+    #     est=np.expand_dims(est, 1),
+    #     gt=np.expand_dims(objs, 1),
+    # )
+
+    # recon_metrics_self = ReconstructionMetrics2D(
+    #     est=np.expand_dims(est, 1),
+    #     gt=np.expand_dims(est, 2),
+    # )
     recon_metrics_gt = ReconstructionMetrics2D(
-        est=np.expand_dims(est, 1),
-        gt=np.expand_dims(objs, 1),
-    )
-
-
-    recon_metrics_self = ReconstructionMetrics2D(
-        est=np.expand_dims(est, 1),
-        gt=np.expand_dims(est, 2),
-    )
-    # recon_metrics_y = ReconstructionMetrics2D(
-    #     est=np.expand_dims(fwd(rl_steps)[:,0], 1),
-    #     gt=np.expand_dims(fwd(objs)[0], 1),
-    # )
-
-    # recon_metrics = ReconstructionMetrics2D(
-    #     est=rl_steps,gt=fwd(obj),
-    # )
-    # metrics_dict["KLSelf"] = recon_metrics_self.kl()
+        est=np.expand_dims(y_est, 1),
+        gt=np.expand_dims(gt, 1),
     
-    # metrics_dict = metrics.get_metrics_dict(
-    #     [
-    #         recon_metrics_gt.kl,
-    #         recon_metrics_self.kl,
-    #     ]
-    # )
+    )
     data_array_gt = xr.DataArray(
         recon_metrics_gt.kl(),
-        dims=("iterations", "splitting_0", "splitting_1"),
+        dims=("iterations", "gt", "est"),
         coords={
-            "splitting_1": ["y_gt","y", "y_v", "y_t"],
-            "splitting_0": ["y_gt","y", "y_v", "y_t"],
+            "gt": ["y_est_gt", "y_est", "y_est_v", "y_est_t"],
+            "est": ["y_gt", "y", "y_gt_v", "y_gt_t"],
         },
-    ).rename("score")
+    ).rename("kl_divergence")
+
+
+    def facet_minima(*args, **kwargs):
+        x, y = args
+        # hue = kwargs.pop("hue")
+        data = kwargs.pop("data")
+        index = list(set(data.columns)-{*args})
+
+        minimas = data.set_index([x]+index).groupby(index).apply(minima)
+        plt.scatter(minimas["min_x"], minimas["min_y"], color="red")
+
+        return plt.gca()
+
+    def minima(df):
+        min_x = df.squeeze().argmin()
+        min_y = df.iloc[min_x]    
+        return pd.DataFrame({"min_x":min_x, "min_y":min_y})
     
-    g = sns.relplot(
-        data=data_array_gt.to_dataframe(),
-        x="iterations",
-        y="score",
-        row="splitting_0",
-        hue="splitting_1",
-        kind="line",
-        facet_kws={"sharey": False, "sharex": True},
+    
+    df_gt_kl = (
+            data_array_gt
+            .to_dataframe()
+            .xs("y_est_gt", level="gt",drop_level=False)
+            .drop("y_gt", level="est")
     )
-    g.set(xlim=(1, 100))
+
+    g = sns.lineplot(
+        data=df_gt_kl.reset_index(),
+        hue="est",
+        x="iterations",
+        y="kl_divergence",
+        # kind="line",
+        )
+    # g.add_legend()
+    sns.scatterplot(
+        data=df_gt_kl.groupby(level=("gt","est")).apply(minima).reset_index(),
+        hue="est",
+        x="min_x",
+        y="min_y",
+        # kind="line",
+        ax=g
+        )
+    
+    g.set(xlim=(0, 100))
     g.set(yscale="log")
     g
-
-    # data_array_self = xr.DataArray(
-    #     recon_metrics_self.kl(),
-    #     dims=("iterations", "splitting_0", "splitting_1"),
-    #     coords={
-    #         "splitting_1": ["y", "y_v", "y_T"],
-    #         "splitting_0": ["y", "y_v", "y_T"],
-    #     },
-    # )
     
-    # g = sns.relplot(
-    #     data=data_array_self.rename("score").to_dataframe(),
-    #     x="iterations",
-    #     y="score",
-    #     row="splitting_0",
-    #     col="splitting_1",
-    #     kind="line",
-    #     facet_kws={"sharey": False, "sharex": True},
-    # )
-    # g.set(xlim=(1, 500))
-    # g.set(yscale="log")
-    # g
-
-
-    # # metrics_dict
-    # # kl_est_noiseless_signal = np.sum(
-    # #     fwd(obj) * np.log((fwd(obj) + 1e-9) / (fwd(rl_steps) + 1e-9)),
-    # #     axis=(-2, -1),
-    # # )
-    # # rl_steps
-    # # for metrics_fn in metrics_dict:
-    # #     # print(f"{metrics_fn.__name__}: {metrics_dict[metrics_fn]}")
-    # #     for obj in metrics_dict[metrics_fn]:
-    # #         print(obj)
-    # #         # plt.figure()
-    # #         # plt.plot(obj)
-    # #         # plt.show()
-
-    # # # Create an empty list to store temporary dataframes
-    # # dfs = []
-
-    # # # For each key and value in the dictionary
-    # # for key, value in metrics_dict.items():
-    # #     # Create a DataFrame from the value
-    # #     value_df = pd.DataFrame(value.T, index=['obj', 'V', 'T']).rename_axis('splitting')
-
-    # #     # Add a 'dict_key' column with the key value
-    # #     value_df['dict_key'] = key
-
-    # #     # Melt the DataFrame to long format and append it to the list
-    # #     dfs.append(value_df)
-
-    # # # Concatenate all the temporary dataframes
-    # # df_long = pd.concat(dfs).set_index('dict_key',append=True)
-    # recon_metrics_y = ReconstructionMetrics2D(
-    #     est=np.expand_dims(est[:,0], 1),
-    #     gt=np.expand_dims(gt[0], 1),
-    # )
-    
-    # df = pd.concat(
-    #     {
-    #         k: pd.DataFrame(v.T, index=["obj", "V", "T"])
-    #         for k, v in metrics_dict.items()
-    #     },
-    #     names=["dict_key", "splitting"],
-    # )  #
-
-    # df_long = df.reset_index().melt(
-    #     id_vars=["dict_key", "splitting"], var_name="iteration", value_name="score"
-    # )
-
-    # g = sns.relplot(
-    #     data=df_long,
-    #     x="iteration",
-    #     y="score",
-    #     row="splitting",
-    #     col="dict_key",
-    #     hue="splitting",
-    #     style="dict_key",
-    #     kind="line",
-    #     facet_kws={"sharey": False, "sharex": True},
-    # )
-    # g.set(xlim=(0, 100))
-    # g.set(yscale="log")
-    # g
+    g = sns.FacetGrid(
+        data=df_gt_kl.reset_index(),
+        hue="est",
+        # x="iterations",
+        # y="kl_divergence",
+        # kind="line",
+        )
+    g.set(xlim=(0, 100))
+    g.map(sns.lineplot, "iterations", "kl_divergence")
+    g.map_dataframe(facet_minima, "iterations", "kl_divergence", hue="est")
+    g.set(yscale="log")
+    g.add_legend()
+    g
 
 
 main()
