@@ -30,6 +30,7 @@ binomial_splitting = [
         "binomial_splitting",
     ], markers = "extra == 'binomial_splitting'", optional = true, develop = true },
 ]
+xarray = "^2023.7.0"
 
 [tool.poetry.extras]
 binomial_splitting = ["binomial_splitting"]
