@@ -1,0 +1,9 @@
+# name: pydeconv
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - snakemake
+  - pip
+  - pip:
+    - -e .
