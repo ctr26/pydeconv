@@ -11,41 +11,41 @@ EPS = 1e-12
 
 
 # TODO check axes
-def loglikelihood(y_est, y_gt, axis=(-2, -1)):
+def loglikelihood(est, gt, axis=(-2, -1)):
     return np.sum(
-        -y_est + y_gt * np.log(y_est + EPS),
+        -est + gt * np.log(est + EPS),
         axis=axis,
     )
 
 
-def poisson(y_est, y_gt, axis=(-2, -1)):
+def poisson(est, gt, axis=(-2, -1)):
     return np.sum(
-        -y_est + y_gt * np.log(y_gt + EPS),
+        -est + gt * np.log(gt + EPS),
         axis=axis,
     )
 
 
 #
-def ncc(x_est, x_gt, axis=(-2, -1)):
+def ncc(est, gt, axis=(-2, -1)):
     return np.squeeze(
         np.mean(
-            (x_gt - np.mean(x_gt)) * (x_est, np.mean(x_est, axis=axis, keepdims=True)),
+            (gt - np.mean(gt)) * (est, np.mean(est, axis=axis, keepdims=True)),
             axis=axis,
             keepdims=True,
         )
-        / (np.std(x_gt) * np.std(x_est, axis=axis, keepdims=True))
+        / (np.std(gt) * np.std(est, axis=axis, keepdims=True))
     )
 
 
-def crossentropy(y_est, y_gt, axis=(-2, -1)):
+def crossentropy(est, gt, axis=(-2, -1)):
     return np.sum(
-        y_est * np.log(y_gt + EPS),
+        est * np.log(gt + EPS),
         axis=axis,
     )
 
 
-def kl_noiseless_signal(y_est, y_gt, axis=(-2, -1)):
-    return kl_div(p=y_gt, q=y_est, axis=axis)
+def kl(est, gt, axis=(-2, -1)):
+    return kl_div(p=gt, q=est, axis=axis)
     # return np.sum(
     # fwd(obj) * np.log((fwd(obj) + EPS) / (fwd(estimate) + EPS)),
     # axis=(1, 2),

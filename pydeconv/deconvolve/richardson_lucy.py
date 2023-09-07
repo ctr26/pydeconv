@@ -1,9 +1,9 @@
 import numpy as np
 from tqdm import tqdm
-from .base import DeconvolveBase
+from .base import DeconvolveBase,IterativeDeconvolve
 
 
-class RichardsonLucy(DeconvolveBase):
+class RichardsonLucy(IterativeDeconvolve):
     def __init__(self, psf, max_iterations=25, early_stopping=None):
         super().__init__(
             psf,
@@ -13,38 +13,8 @@ class RichardsonLucy(DeconvolveBase):
 
     def est_0(self, image):
         return self.est_grey(image)
-
-    def est_grey(self, image):
-        return np.ones_like(image) + np.mean(image)
-
-    def est_signal(self, image):
-        return self.fwd(image)
-
-    def est_half(self, image):
-        return np.ones_like(image) * (image.max() / 2)
-
-    # def deconvolution_step(self, image, i):
-    #     return image
-
     def step(self, image, i):
         return step(est=self.steps[i], img=image, fwd=self.fwd, bwd=self.bwd)
-
-    # def __call__(self, image):
-    #     if self.history:
-    #         return richardson_lucy_history(
-    #             image,
-    #             self.fwd,
-    #             self.bwd,
-    #             self.iterations,
-    #         )
-    #     else:
-    #         return richardson_lucy(
-    #             image,
-    #             self.fwd,
-    #             self.bwd,
-    #             self.iterations,
-    #         )
-
 
 def step(est, img, fwd, bwd):
     convEst = fwd(est)
