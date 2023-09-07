@@ -15,27 +15,19 @@ import seaborn as sns
 import xarray as xr
 
 
-def main(
+# Make more general
+def simulation(
     numPixel=(256, 256),
     midPos=(128, 128),
     pxSize=(0.04, 0.04),
     lambda0=0.520,
     seed=10,
-    no_image_generation=False,
-    no_analysis=False,
-    no_save_csv=False,
-    no_show_figures=False,
-    no_save_images=False,
-    # Variables,
-    na=0.8,
-    max_photons=1e2,
     obj_name="spokes",
-    # possible objects are: 'spokes', 'points_random', 'test_target',
-    niter=500,
-    save_images=True,
-    savefig=True,
-    out_dir="results",
+    max_photons=1e2,
+    na=0.8,
     coin_flip_bias=0.5,
+    niter=512,
+    metric_fn="kl",
 ):
     np.random.seed(seed)
     simSize = np.multiply(numPixel, pxSize)
@@ -87,76 +79,144 @@ def main(
     recon_metrics_gt = ReconstructionMetrics2D(
         est=np.expand_dims(y_est, 1),
         gt=np.expand_dims(gt, 1),
-    
     )
+
     data_array_gt = xr.DataArray(
-        recon_metrics_gt.kl(),
+        recon_metrics_gt(metric_fn),
         dims=("iterations", "gt", "est"),
         coords={
-            "gt": ["y_est_gt", "y_est", "y_est_v", "y_est_t"],
-            "est": ["y_gt", "y", "y_gt_v", "y_gt_t"],
+            "gt": [
+                "y_est_gt",
+                "y_est",
+                "y_est_v",
+                "y_est_t",
+            ],
+            "est": [
+                "y_gt",
+                "y",
+                "y_gt_v",
+                "y_gt_t",
+            ],
         },
-    ).rename("kl_divergence")
+    ).rename(metric_fn)
+    return data_array_gt.to_dataframe()
 
 
-    def facet_minima(*args, **kwargs):
-        x, y = args
-        # hue = kwargs.pop("hue")
-        data = kwargs.pop("data")
-        index = list(set(data.columns)-{*args})
+def main(
+    numPixel=(256, 256),
+    midPos=(128, 128),
+    pxSize=(0.04, 0.04),
+    lambda0=0.520,
+    seed=10,
+    no_image_generation=False,
+    no_analysis=False,
+    no_save_csv=False,
+    no_show_figures=False,
+    no_save_images=False,
+    # Variables,
+    na=0.8,
+    max_photons=1e2,
+    obj_name="spokes",
+    # possible objects are: 'spokes', 'points_random', 'test_target',
+    niter=512,
+    save_images=True,
+    savefig=True,
+    out_dir="results",
+    coin_flip_bias=0.5,
+):
+    return None
 
-        minimas = data.set_index([x]+index).groupby(index).apply(minima)
-        plt.scatter(minimas["min_x"], minimas["min_y"], color="red")
 
-        return plt.gca()
-
-    def minima(df):
-        min_x = df.squeeze().argmin()
-        min_y = df.iloc[min_x]    
-        return pd.DataFrame({"min_x":min_x, "min_y":min_y})
-    
-    
-    df_gt_kl = (
-            data_array_gt
-            .to_dataframe()
-            .xs("y_est_gt", level="gt",drop_level=False)
-            .drop("y_gt", level="est")
+def plot_score_splitting(
+    numPixel=(256, 256),
+    midPos=(128, 128),
+    pxSize=(0.04, 0.04),
+    lambda0=0.520,
+    seed=10,
+    # Variables,
+    na=0.8,
+    max_photons=1e2,
+    obj_name="spokes",
+    # possible objects are: 'spokes', 'points_random', 'test_target',
+    niter=512,
+    save_images=True,
+    savefig=True,
+    out_dir="results",
+    coin_flip_bias=0.5,
+):
+    data_array_gt = simulation(
+        numPixel=numPixel,
+        midPos=midPos,
+        pxSize=pxSize,
+        lambda0=lambda0,
+        seed=seed,
+        obj_name=obj_name,
+        max_photons=max_photons,
+        na=na,
+        coin_flip_bias=coin_flip_bias,
+        niter=niter,
+        metric_fn="kl",
     )
 
-    g = sns.lineplot(
-        data=df_gt_kl.reset_index(),
-        hue="est",
-        x="iterations",
-        y="kl_divergence",
-        # kind="line",
-        )
-    # g.add_legend()
-    sns.scatterplot(
-        data=df_gt_kl.groupby(level=("gt","est")).apply(minima).reset_index(),
-        hue="est",
-        x="min_x",
-        y="min_y",
-        # kind="line",
-        ax=g
-        )
-    
-    g.set(xlim=(0, 100))
-    g.set(yscale="log")
-    g
-    
+    df_gt_kl = data_array_gt.xs("y_est_gt", level="gt", drop_level=False).drop(
+        "y_gt", level="est"
+    )
+
+    # g = sns.lineplot(
+    #     data=df_gt_kl.reset_index(),
+    #     hue="est",
+    #     x="iterations",
+    #     y="kl",
+    #     # kind="line",
+    # )
+    # g.set(xlim=(0, 100))
+    # g.set(yscale="log")
+    # sns.scatterplot(
+    #     data=df_gt_kl.groupby(level=("gt", "est")).apply(minima).reset_index(),
+    #     hue="est",
+    #     x="min_x",
+    #     y="min_y",
+    #     # kind="line",
+    #     ax=g,
+    # )
+
+    # # g.add_legend()
+
+    # g
+
     g = sns.FacetGrid(
         data=df_gt_kl.reset_index(),
         hue="est",
         # x="iterations",
         # y="kl_divergence",
         # kind="line",
-        )
+    )
+    g.map(sns.lineplot, "iterations", "kl")
+    g.map_dataframe(facet_minima, "iterations", "kl", hue="est")
+
     g.set(xlim=(0, 100))
-    g.map(sns.lineplot, "iterations", "kl_divergence")
-    g.map_dataframe(facet_minima, "iterations", "kl_divergence", hue="est")
     g.set(yscale="log")
     g.add_legend()
-    g
+    g.savefig("results/multiple_splitting.png")
 
 
-main()
+def facet_minima(*args, **kwargs):
+    x, y = args
+    # hue = kwargs.pop("hue")
+    data = kwargs.pop("data")
+    index = list(set(data.columns) - {*args})
+
+    minimas = data.set_index([x] + index).groupby(index).apply(minima)
+    plt.scatter(minimas["min_x"], minimas["min_y"], color="red")
+
+    return plt.gca()
+
+
+def minima(df):
+    min_x = df.squeeze().argmin()
+    min_y = df.iloc[min_x]
+    return pd.DataFrame({"min_x": min_x, "min_y": min_y})
+
+
+if __name__ == "__main__":
+    main()
