@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Craig  <craig.russell.phd@gmail.com>"]
 
-packages = [{ include = "pydeconv" }]
+packages = [{ include = "src/pydeconv" }]
 exclude = ["tests", "docs", "binomial_splitting"]
 
 [tool.poetry.dependencies]
@@ -26,11 +26,12 @@ imageio = "^2.5"
 # torchvision = "^0.13.1"
 llvmlite = "0.39.0"
 binomial_splitting = [
-    { path = "./binomial_splitting", extras = [
+    { path = "./src/binomial_splitting", extras = [
         "binomial_splitting",
     ], markers = "extra == 'binomial_splitting'", optional = true, develop = true },
 ]
 xarray = "^2023.7.0"
+hydra-core = "^1.3.2"
 
 [tool.poetry.extras]
 binomial_splitting = ["binomial_splitting"]
@@ -47,3 +48,11 @@ build-backend = "poetry.masonry.api"
 [virtualenvs]
 create = true
 in-project = true
+
+[tool.black]
+line-length = 79
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.poetry.scripts]
+pydeconv = "pydeconv.cli:main"
