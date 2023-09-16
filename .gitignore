@@ -1,7 +1,8 @@
+*.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-
 # C extensions
 *.so
 
@@ -52,4 +53,13 @@ docs/_build/
 .vscode
 poetry.lock
 
+
+*
+!.gitignore
+!tests
+!src
+!Makefile
+!pyproject.toml
+!README.md
+!LICENSE
 
