@@ -1,5 +1,6 @@
 # Expanded the modified richardson lucy equation to the first two components.
 import numpy as np
+from functools import wraps
 
 # from scipy.signal.signaltools import deconvolve
 from ..utils import xyz_viewer
@@ -9,14 +10,23 @@ from pydeconv.simulate import psfs
 from pydeconv import optics, utils
 from tqdm import tqdm
 
+# from . import early_stopping import EarlyStopping
+from . import stopping
 
-class EarlyStopping:
-    # Need a smart way of hooking into Deconvolve
-    def __init__(self):
-        pass
+import logging
 
-    def __call__(self, history):
-        return False
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def stopping_decorator(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if self.check_stopping_conditions(*args, **kwargs):
+            raise StopIteration
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class DeconvolveBase:
@@ -37,20 +47,48 @@ class DeconvolveBase:
 
 
 class IterativeDeconvolve(DeconvolveBase):
-    
-    early_stopping = EarlyStopping()
+    stopping_conditions = []
+
     def __init__(self, psf, max_iterations=25, early_stopping=None):
         super().__init__(psf=psf)
-
         self.max_iterations = max_iterations
-        if early_stopping is not None:
-            self.early_stopping = early_stopping
+        if early_stopping is None:
+            early_stopping = stopping.NoStopping()
+        self.stopping_conditions.append(early_stopping)
 
-    def step(self, image, i):
-        return image
+    def check_stopping_conditions(self, *args, **kwargs):
+        """Check all stopping conditions. Return True if any condition is met."""
+        return any(
+            condition(*args, **kwargs)
+            for condition in self.stopping_conditions
+        )
 
-    def check_early_stopping(self):
-        return self.early_stopping(self.steps)
+    def step_loop(self, steps, y):
+        length = len(steps)
+        for i in tqdm(range(length)):
+            steps[i] = self._step(y, steps[: i + 1])
+        return steps[: i + 1]
+
+    # @stopping_decorator
+    def _step(self, y, steps):
+        # logger.info(f"Running iteration {iteration}")
+        iteration = len(steps) - 1
+        return self.step(y=y, steps=steps)
+
+    def step(self, y, steps):
+        pass
+
+    def deconvolve(self, image, history=False):
+        est_0 = self.est_0(image)
+        steps = np.expand_dims(est_0, 0).repeat(self.max_iterations, axis=0)
+        # self.steps = steps
+        steps = self.step_loop(y=image, steps=steps)
+        if history:
+            return steps
+        return steps[-1]
+
+    # def callback_stopping(self, history, iterations):
+    # return self.stopping_conditions(history, iterations),
 
     def est_0(self, image):
         return image
@@ -64,23 +102,3 @@ class IterativeDeconvolve(DeconvolveBase):
     def est_half(self, image):
         return np.ones_like(image) * (image.max() / 2)
 
-    def deconvolve(self, image, history=False):
-        est_0 = self.est_0(image)
-        self.steps = np.expand_dims(est_0, 0).repeat(self.max_iterations + 1, axis=0)
-        i = 0
-        for i in tqdm(range(self.max_iterations)):
-            self.steps[i + 1] = self.step(image, i=i)
-            if self.check_early_stopping():
-                break
-        if history:
-            return self.steps
-        return self.steps[i]
-
-
-class Factory(DeconvolveBase):
-    # Do some factory magic to get the right deconvolution method
-    pass
-
-
-# def deconvolve(image, psf_image, method="rl"):
-#     pass

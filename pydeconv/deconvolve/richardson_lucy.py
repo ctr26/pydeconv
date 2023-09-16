@@ -1,10 +1,13 @@
 import numpy as np
 from tqdm import tqdm
-from .base import DeconvolveBase,IterativeDeconvolve
+from .base import DeconvolveBase, IterativeDeconvolve
+from . import stopping
 
 
 class RichardsonLucy(IterativeDeconvolve):
-    def __init__(self, psf, max_iterations=25, early_stopping=None):
+    def __init__(
+        self, psf, max_iterations=25, early_stopping=stopping.EarlyStopping()
+    ):
         super().__init__(
             psf,
             max_iterations=max_iterations,
@@ -13,8 +16,10 @@ class RichardsonLucy(IterativeDeconvolve):
 
     def est_0(self, image):
         return self.est_grey(image)
-    def step(self, image, i):
-        return step(est=self.steps[i], img=image, fwd=self.fwd, bwd=self.bwd)
+
+    def step(self, y, steps):
+        return step(est=steps[-1], img=y, fwd=self.fwd, bwd=self.bwd)
+
 
 def step(est, img, fwd, bwd):
     convEst = fwd(est)
@@ -22,6 +27,7 @@ def step(est, img, fwd, bwd):
     convRatio = bwd(ratio)
     convRatio = convRatio / bwd(np.ones_like(img))
     rl_step = est * convRatio
+    # plt.imshow(fwd(img[0]))
     return np.clip(rl_step, 0, np.inf)
 
 

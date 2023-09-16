@@ -59,11 +59,11 @@ def simulation(
     # objs = objs[0]
     # rl_steps = np.expand_dims(objs, 0).repeat(niter, axis=0)
     # rl_steps[0] = objs
-    rl = RichardsonLucy(psf, max_iterations=niter, early_stopping=None)
+    rl = RichardsonLucy(psf, max_iterations=niter)
     rl_steps = rl.deconvolve(objs, history=True)
     # TODO rl is broken
 
-    est = rl_steps[1:]
+    est = rl_steps
     y_est = fwd(est)
     gt = fwd(objs)
 
@@ -219,4 +219,4 @@ def minima(df):
 
 
 if __name__ == "__main__":
-    main()
+    df = simulation()
